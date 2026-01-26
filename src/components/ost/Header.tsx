@@ -1,0 +1,132 @@
+import { useState } from 'react';
+import { TreeDeciduous, Settings, Share2, RotateCcw, Code, Copy, Check } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useOSTStore } from '@/store/ostStore';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+
+export function Header() {
+  const { tree, resetTree, getMarkdown, setMarkdown } = useOSTStore();
+  const [markdownEditorOpen, setMarkdownEditorOpen] = useState(false);
+  const [editedMarkdown, setEditedMarkdown] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  const handleOpenMarkdownEditor = () => {
+    setEditedMarkdown(getMarkdown());
+    setMarkdownEditorOpen(true);
+  };
+
+  const handleSaveMarkdown = () => {
+    setMarkdown(editedMarkdown);
+    setMarkdownEditorOpen(false);
+  };
+
+  const handleCopyMarkdown = async () => {
+    await navigator.clipboard.writeText(editedMarkdown);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <header className="h-14 bg-card border-b border-border flex items-center justify-between px-4 shrink-0">
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
+          <TreeDeciduous className="w-5 h-5 text-primary-foreground" />
+        </div>
+        <div>
+          <h1 className="text-sm font-semibold text-foreground">OST Builder</h1>
+          <p className="text-xs text-muted-foreground">{tree.name}</p>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Dialog open={markdownEditorOpen} onOpenChange={setMarkdownEditorOpen}>
+          <DialogTrigger asChild>
+            <Button variant="ghost" size="sm" className="gap-2" onClick={handleOpenMarkdownEditor}>
+              <Code className="w-4 h-4" />
+              <span className="hidden sm:inline">Markdown</span>
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-3xl h-[80vh] flex flex-col">
+            <DialogHeader>
+              <DialogTitle>Edit Markdown Source</DialogTitle>
+              <DialogDescription>
+                Edit the raw Markdown structure of your OST. Changes will update the tree when saved.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex-1 min-h-0">
+              <Textarea
+                value={editedMarkdown}
+                onChange={(e) => setEditedMarkdown(e.target.value)}
+                className="h-full font-mono text-sm resize-none"
+                placeholder="Enter your OST markdown..."
+              />
+            </div>
+            <DialogFooter className="flex-row justify-between sm:justify-between">
+              <Button variant="outline" size="sm" onClick={handleCopyMarkdown} className="gap-2">
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {copied ? 'Copied!' : 'Copy'}
+              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setMarkdownEditorOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSaveMarkdown}>Save Changes</Button>
+              </div>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="ghost" size="sm" className="gap-2">
+              <RotateCcw className="w-4 h-4" />
+              <span className="hidden sm:inline">Reset</span>
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Reset Tree</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will reset your Opportunity Solution Tree to the default example.
+                All your changes will be lost.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={resetTree}>Reset</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <Button variant="ghost" size="sm" className="gap-2">
+          <Share2 className="w-4 h-4" />
+          <span className="hidden sm:inline">Share</span>
+        </Button>
+
+        <Button variant="ghost" size="icon" className="h-8 w-8">
+          <Settings className="w-4 h-4" />
+        </Button>
+      </div>
+    </header>
+  );
+}
