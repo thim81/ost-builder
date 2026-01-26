@@ -2,7 +2,13 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { nanoid } from 'nanoid';
 import type { OSTCard, OSTTree, CardType, CardStatus, CanvasState } from '@/types/ost';
-import { parseMarkdownToTree, serializeTreeToMarkdown, createDefaultMarkdown, encodeMarkdownToUrlFragment, decodeMarkdownFromUrlFragment } from '@/lib/markdownOST';
+import {
+  parseMarkdownToTree,
+  serializeTreeToMarkdown,
+  createDefaultMarkdown,
+  encodeMarkdownToUrlFragment,
+  decodeMarkdownFromUrlFragment,
+} from '@/lib/markdownOST';
 
 interface OSTStore {
   // Markdown is the source of truth
@@ -82,9 +88,7 @@ export const useOSTStore = create<OSTStore>()(
             };
           }
 
-          const rootIds = parentId
-            ? state.tree.rootIds
-            : [...state.tree.rootIds, id];
+          const rootIds = parentId ? state.tree.rootIds : [...state.tree.rootIds, id];
 
           const newTree = { ...state.tree, cards, rootIds };
           const newMarkdown = serializeTreeToMarkdown(newTree);
@@ -217,7 +221,7 @@ export const useOSTStore = create<OSTStore>()(
 
           return {
             tree: newTree,
-            markdown: newMarkdown
+            markdown: newMarkdown,
           };
         });
       },
@@ -283,7 +287,7 @@ export const useOSTStore = create<OSTStore>()(
 
         return true;
       },
-      
+
       setMarkdown: (markdown: string) => {
         set({
           markdown,
@@ -304,6 +308,6 @@ export const useOSTStore = create<OSTStore>()(
           state.tree = parseMarkdownToTree(state.markdown);
         }
       },
-    }
-  )
+    },
+  ),
 );

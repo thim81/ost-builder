@@ -3,21 +3,21 @@ import type { OSTCard, OSTTree, CardType, CardStatus } from '@/types/ost';
 
 /**
  * Markdown OST Format:
- * 
+ *
  * # Tree Name
- * 
+ *
  * ## [Outcome] Title {#id} @status
  * Description text here
  * - start: 0
- * - current: 28  
+ * - current: 28
  * - target: 40
- * 
+ *
  * ### [Opportunity] Title {#id} @status
  * Description text here
- * 
+ *
  * #### [Solution] Title {#id} @status
  * Description text here
- * 
+ *
  * ##### [Experiment] Title {#id} @status
  * Description text here
  */
@@ -39,9 +39,9 @@ const HEADING_LEVELS: Record<CardType, number> = {
 const STATUS_MAP: Record<string, CardStatus> = {
   'on-track': 'on-track',
   'at-risk': 'at-risk',
-  'next': 'next',
-  'done': 'done',
-  'none': 'none',
+  next: 'next',
+  done: 'done',
+  none: 'none',
 };
 
 interface ParsedCard {
@@ -64,7 +64,9 @@ function parseHeadingLine(line: string): { level: number; content: string } | nu
   return { level: match[1].length, content: match[2] };
 }
 
-function parseCardHeading(content: string): Omit<ParsedCard, 'level' | 'description' | 'metrics'> | null {
+function parseCardHeading(
+  content: string,
+): Omit<ParsedCard, 'level' | 'description' | 'metrics'> | null {
   // Match: [Type] Title {#id} @status or [Type] Title @status or [Type] Title {#id} or [Type] Title
   const typeMatch = content.match(/^\[(Outcome|Opportunity|Solution|Experiment)\]\s+/i);
   if (!typeMatch) return null;
@@ -98,9 +100,11 @@ function parseCardHeading(content: string): Omit<ParsedCard, 'level' | 'descript
   };
 }
 
-function parseMetrics(lines: string[]): { start: number; current: number; target: number } | undefined {
+function parseMetrics(
+  lines: string[],
+): { start: number; current: number; target: number } | undefined {
   const metrics: { start?: number; current?: number; target?: number } = {};
-  
+
   for (const line of lines) {
     const startMatch = line.match(/^-\s*start:\s*(\d+(?:\.\d+)?)/i);
     const currentMatch = line.match(/^-\s*current:\s*(\d+(?:\.\d+)?)/i);
@@ -111,7 +115,11 @@ function parseMetrics(lines: string[]): { start: number; current: number; target
     if (targetMatch) metrics.target = parseFloat(targetMatch[1]);
   }
 
-  if (metrics.start !== undefined || metrics.current !== undefined || metrics.target !== undefined) {
+  if (
+    metrics.start !== undefined ||
+    metrics.current !== undefined ||
+    metrics.target !== undefined
+  ) {
     return {
       start: metrics.start ?? 0,
       current: metrics.current ?? 0,
@@ -139,17 +147,18 @@ export function parseMarkdownToTree(markdown: string): OSTTree {
     if (!currentCard) return;
 
     const descriptionLines = contentLines.filter(
-      (line) => !line.match(/^-\s*(start|current|target):/i)
+      (line) => !line.match(/^-\s*(start|current|target):/i),
     );
-    const metricsLines = contentLines.filter((line) =>
-      line.match(/^-\s*(start|current|target):/i)
-    );
+    const metricsLines = contentLines.filter((line) => line.match(/^-\s*(start|current|target):/i));
 
     const description = descriptionLines.join('\n').trim() || undefined;
     const metrics = currentCard.type === 'outcome' ? parseMetrics(metricsLines) : undefined;
 
     // Find parent based on heading level
-    while (parentStack.length > 0 && parentStack[parentStack.length - 1].level >= currentCard.level) {
+    while (
+      parentStack.length > 0 &&
+      parentStack[parentStack.length - 1].level >= currentCard.level
+    ) {
       parentStack.pop();
     }
     const parentId = parentStack.length > 0 ? parentStack[parentStack.length - 1].id : null;
@@ -222,7 +231,7 @@ export function serializeTreeToMarkdown(tree: OSTTree): string {
     const prefix = TYPE_PREFIXES[card.type];
     const statusSuffix = card.status && card.status !== 'none' ? ` @${card.status}` : '';
     const heading = `${'#'.repeat(level)} ${prefix} ${card.title} {#${card.id}}${statusSuffix}`;
-    
+
     lines.push(heading);
 
     if (card.description) {
