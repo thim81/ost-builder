@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { nanoid } from 'nanoid';
 import type { OSTCard, OSTTree, CardType, CardStatus, CanvasState } from '@/types/ost';
-import { parseMarkdownToTree, serializeTreeToMarkdown, createDefaultMarkdown } from '@/lib/markdownOST';
+import { parseMarkdownToTree, serializeTreeToMarkdown, createDefaultMarkdown, encodeMarkdownToUrlFragment, decodeMarkdownFromUrlFragment } from '@/lib/markdownOST';
 
 interface OSTStore {
   // Markdown is the source of truth
@@ -29,10 +29,12 @@ interface OSTStore {
 
   // Tree management
   resetTree: () => void;
-  
+
   // Markdown operations
   getMarkdown: () => string;
   setMarkdown: (markdown: string) => void;
+  getShareLink: () => string;
+  loadFromShareLink: (urlOrFragment: string) => boolean;
 }
 
 const defaultMarkdown = createDefaultMarkdown();
@@ -213,9 +215,9 @@ export const useOSTStore = create<OSTStore>()(
           const newTree = { ...state.tree, cards, rootIds };
           const newMarkdown = serializeTreeToMarkdown(newTree);
 
-          return { 
-            tree: newTree, 
-            markdown: newMarkdown 
+          return {
+            tree: newTree,
+            markdown: newMarkdown
           };
         });
       },
@@ -245,6 +247,42 @@ export const useOSTStore = create<OSTStore>()(
       },
 
       getMarkdown: () => get().markdown,
+      getShareLink: () => {
+        // URL fragment is client-side only and doesn't hit the server.
+        // NOTE: long trees can still exceed browser URL limits.
+        const fragment = encodeMarkdownToUrlFragment(get().markdown);
+
+        // Use current location if available (browser), otherwise return fragment-only.
+        if (typeof window !== 'undefined') {
+          const base = `${window.location.origin}${window.location.pathname}`;
+          return `${base}#${fragment}`;
+        }
+
+        return `#${fragment}`;
+      },
+
+      loadFromShareLink: (urlOrFragment: string) => {
+        const fragment = (() => {
+          // Accept full URL, '#fragment', or raw fragment.
+          const trimmed = (urlOrFragment || '').trim();
+          if (!trimmed) return '';
+          const hashIdx = trimmed.indexOf('#');
+          if (hashIdx >= 0) return trimmed.slice(hashIdx + 1);
+          return trimmed;
+        })();
+
+        const decoded = decodeMarkdownFromUrlFragment(fragment);
+        if (!decoded) return false;
+
+        set({
+          markdown: decoded,
+          tree: parseMarkdownToTree(decoded),
+          selectedCardId: null,
+          editingCardId: null,
+        });
+
+        return true;
+      },
       
       setMarkdown: (markdown: string) => {
         set({

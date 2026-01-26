@@ -272,3 +272,50 @@ Test sidebar vs. inline placement
 High drop-off rate at step 3
 `;
 }
+
+/**
+ * Share-link helpers
+ *
+ * Encodes markdown into a URL-safe fragment string.
+ * We use base64url over UTF-8. (No compression; keeps deps at zero.)
+ *
+ * Typical use: `${location.pathname}#${encodeMarkdownToUrlFragment(markdown)}`
+ */
+export function encodeMarkdownToUrlFragment(markdown: string): string {
+  // Convert UTF-8 bytes -> base64
+  const bytes = new TextEncoder().encode(markdown);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  const base64 = btoa(binary);
+
+  // base64url (RFC 4648)
+  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+/**
+ * Decodes a URL fragment produced by `encodeMarkdownToUrlFragment`.
+ * Returns `null` when decoding fails.
+ */
+export function decodeMarkdownFromUrlFragment(fragment: string): string | null {
+  try {
+    if (!fragment) return null;
+
+    // base64url -> base64
+    let base64 = fragment.replace(/-/g, '+').replace(/_/g, '/');
+    // Pad to multiple of 4
+    const pad = base64.length % 4;
+    if (pad) base64 += '='.repeat(4 - pad);
+
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+
+    return new TextDecoder().decode(bytes);
+  } catch {
+    return null;
+  }
+}
