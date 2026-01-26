@@ -19,7 +19,12 @@ function ShareLinkLoader() {
 
     // Accept links like: /#<fragment>
     // `loadFromShareLink` also accepts full URLs and raw fragments.
-    useOSTStore.getState().loadFromShareLink(hash);
+    const loaded = useOSTStore.getState().loadFromShareLink(hash);
+
+    // If decoding succeeded, clear the hash so we don't re-apply on refresh
+    if (loaded && typeof window !== 'undefined') {
+      window.history.replaceState(null, '', location.pathname + location.search);
+    }
   }, [location.hash]);
 
   return null;
