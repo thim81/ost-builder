@@ -65,6 +65,7 @@ export function Canvas() {
     (e: React.MouseEvent) => {
       if (e.button === 1 || (e.button === 0 && e.shiftKey)) {
         e.preventDefault();
+        e.stopPropagation();
         setIsPanning(true);
         setPanStart({ x: e.clientX - canvasState.offset.x, y: e.clientY - canvasState.offset.y });
       }
@@ -75,6 +76,8 @@ export function Canvas() {
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
       if (isPanning) {
+        e.preventDefault();
+        e.stopPropagation();
         setOffset(e.clientX - panStart.x, e.clientY - panStart.y);
       }
     },
@@ -84,6 +87,28 @@ export function Canvas() {
   const handleMouseUp = useCallback(() => {
     setIsPanning(false);
   }, []);
+
+  // Add global mouse event listeners during panning
+  useEffect(() => {
+    if (!isPanning) return;
+
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      e.preventDefault();
+      setOffset(e.clientX - panStart.x, e.clientY - panStart.y);
+    };
+
+    const handleGlobalMouseUp = () => {
+      setIsPanning(false);
+    };
+
+    document.addEventListener('mousemove', handleGlobalMouseMove);
+    document.addEventListener('mouseup', handleGlobalMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove);
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, [isPanning, panStart, setOffset]);
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
