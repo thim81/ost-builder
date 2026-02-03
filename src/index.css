@@ -199,6 +199,10 @@
   }
 }
 
+.ost-exporting [data-ost-export-exclude] {
+  display: none !important;
+}
+
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar {
     display: none;

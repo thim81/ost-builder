@@ -131,6 +131,7 @@ export function Canvas() {
         'relative w-full h-full overflow-hidden canvas-grid',
         isPanning ? 'cursor-grabbing' : 'cursor-default'
       )}
+      data-ost-export
       onWheel={handleWheel}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
@@ -139,7 +140,10 @@ export function Canvas() {
       onClick={handleCanvasClick}
     >
       {/* Zoom controls */}
-      <div className="absolute bottom-6 left-6 flex items-center gap-2 bg-card/90 backdrop-blur-sm border border-border rounded-lg p-1 shadow-lg z-50">
+      <div
+        className="absolute bottom-6 left-6 flex items-center gap-2 bg-card/90 backdrop-blur-sm border border-border rounded-lg p-1 shadow-lg z-50"
+        data-ost-export-exclude
+      >
         <Button
           variant="ghost"
           size="icon"
@@ -158,6 +162,14 @@ export function Canvas() {
           onClick={() => setZoom(canvasState.zoom + 0.1)}
         >
           <ZoomIn className="w-4 h-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 px-2"
+          onClick={handleFitToScreen}
+        >
+          Fit View
         </Button>
         <div className="w-px h-6 bg-border" />
         <Button
@@ -185,6 +197,7 @@ export function Canvas() {
         onDragEnd={handleDragEnd}
       >
         <motion.div
+          data-ost-export-content
           className="absolute inset-0 flex justify-center pt-16"
           style={{
             transform: `translate(${canvasState.offset.x}px, ${canvasState.offset.y}px) scale(${canvasState.zoom})`,
