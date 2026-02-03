@@ -22,9 +22,10 @@ const childTypeMap: Record<CardType, CardType> = {
 };
 
 export function TreeNode({ cardId, depth = 0 }: TreeNodeProps) {
-  const { tree, addCard } = useOSTStore();
+  const { tree, addCard, layoutDirection } = useOSTStore();
   const card = tree.cards[cardId];
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const isHorizontal = layoutDirection === 'horizontal';
 
   const { setNodeRef, isOver } = useDroppable({
     id: `droppable-${cardId}`,
@@ -48,7 +49,7 @@ export function TreeNode({ cardId, depth = 0 }: TreeNodeProps) {
   };
 
   return (
-    <div className="flex flex-col items-center">
+    <div className={cn('flex items-center', isHorizontal ? 'flex-row' : 'flex-col')}>
       {/* Card */}
       <div className="relative">
         <OSTCardComponent card={card} />
@@ -57,14 +58,25 @@ export function TreeNode({ cardId, depth = 0 }: TreeNodeProps) {
         {children.length > 0 && (
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-8 h-8 bg-card border border-border rounded-full flex items-center justify-center shadow-sm hover:bg-muted transition-colors z-10"
+            className={cn(
+              'absolute w-8 h-8 bg-card border border-border rounded-full flex items-center justify-center shadow-sm hover:bg-muted transition-colors z-10',
+              isHorizontal
+                ? '-right-4 top-1/2 -translate-y-1/2'
+                : '-bottom-4 left-1/2 -translate-x-1/2'
+            )}
           >
             {isCollapsed ? (
               <span className="text-xs font-semibold text-muted-foreground">
                 {children.length}
               </span>
             ) : (
-              <ChevronDown className="w-4 h-4 text-muted-foreground" />
+              <>
+                {isHorizontal ? (
+                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                )}
+              </>
             )}
           </button>
         )}
@@ -77,51 +89,88 @@ export function TreeNode({ cardId, depth = 0 }: TreeNodeProps) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="flex flex-col items-center"
+            className={cn('flex items-center', isHorizontal ? 'flex-row' : 'flex-col')}
           >
-            {/* Vertical connector */}
-            <div className="w-0.5 h-8 bg-connector" />
-
-            {/* Add buttons row */}
-            {canAddChildren && (
-              <div
-                ref={setNodeRef}
-                className={cn(
-                  'flex items-center gap-2 p-2 rounded-lg transition-colors',
-                  isOver && 'bg-primary/10 ring-2 ring-primary/30'
-                )}
-              >
-                <AddCardButton type={childType} onClick={handleAddChild} size="sm" />
-              </div>
-            )}
-
-            {/* Children container */}
-            {children.length > 0 && (
+            {isHorizontal ? (
               <>
-                {/* Horizontal connector for multiple children */}
-                {children.length > 1 && (
-                  <div className="relative w-full flex justify-center">
-                    <div
-                      className="absolute top-0 h-0.5 bg-connector"
-                      style={{
-                        left: `calc(50% - ${(children.length - 1) * 176}px)`,
-                        width: `${(children.length - 1) * 352}px`,
-                      }}
-                    />
+                {/* Horizontal connector */}
+                <div className="h-0.5 w-8 bg-connector" />
+
+                {/* Add buttons column */}
+                {canAddChildren && (
+                  <div
+                    ref={setNodeRef}
+                    className={cn(
+                      'flex flex-col items-center gap-2 p-2 rounded-lg transition-colors',
+                      isOver && 'bg-primary/10 ring-2 ring-primary/30'
+                    )}
+                  >
+                    <AddCardButton type={childType} onClick={handleAddChild} size="sm" />
                   </div>
                 )}
 
-                <div className="flex gap-8 pt-4">
-                  {children.map((child) => (
-                    <div key={child.id} className="flex flex-col items-center">
-                      {/* Vertical connector from horizontal line */}
-                      {children.length > 1 && (
-                        <div className="w-0.5 h-4 bg-connector -mt-4" />
-                      )}
-                      <TreeNode cardId={child.id} depth={depth + 1} />
+                {/* Children container */}
+                {children.length > 0 && (
+                  <div className="relative flex flex-col gap-8 pl-4">
+                    {children.length > 1 && (
+                      <div className="absolute left-0 top-2 bottom-2 w-0.5 bg-connector" />
+                    )}
+                    {children.map((child) => (
+                      <div key={child.id} className="flex items-center">
+                        <div className="h-0.5 w-4 bg-connector -ml-4" />
+                        <TreeNode cardId={child.id} depth={depth + 1} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                {/* Vertical connector */}
+                <div className="w-0.5 h-8 bg-connector" />
+
+                {/* Add buttons row */}
+                {canAddChildren && (
+                  <div
+                    ref={setNodeRef}
+                    className={cn(
+                      'flex items-center gap-2 p-2 rounded-lg transition-colors',
+                      isOver && 'bg-primary/10 ring-2 ring-primary/30'
+                    )}
+                  >
+                    <AddCardButton type={childType} onClick={handleAddChild} size="sm" />
+                  </div>
+                )}
+
+                {/* Children container */}
+                {children.length > 0 && (
+                  <>
+                    {/* Horizontal connector for multiple children */}
+                    {children.length > 1 && (
+                      <div className="relative w-full flex justify-center">
+                        <div
+                          className="absolute top-0 h-0.5 bg-connector"
+                          style={{
+                            left: `calc(50% - ${(children.length - 1) * 176}px)`,
+                            width: `${(children.length - 1) * 352}px`,
+                          }}
+                        />
+                      </div>
+                    )}
+
+                    <div className="flex gap-8 pt-4">
+                      {children.map((child) => (
+                        <div key={child.id} className="flex flex-col items-center">
+                          {/* Vertical connector from horizontal line */}
+                          {children.length > 1 && (
+                            <div className="w-0.5 h-4 bg-connector -mt-4" />
+                          )}
+                          <TreeNode cardId={child.id} depth={depth + 1} />
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </>
+                )}
               </>
             )}
           </motion.div>

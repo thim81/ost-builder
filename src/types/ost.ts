@@ -2,6 +2,8 @@ export type CardType = 'outcome' | 'opportunity' | 'solution' | 'experiment';
 
 export type CardStatus = 'on-track' | 'at-risk' | 'next' | 'done' | 'none';
 
+export type LayoutDirection = 'vertical' | 'horizontal';
+
 export interface OSTCard {
   id: string;
   type: CardType;

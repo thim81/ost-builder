@@ -1,7 +1,14 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { nanoid } from 'nanoid';
-import type { OSTCard, OSTTree, CardType, CardStatus, CanvasState } from '@/types/ost';
+import type {
+  OSTCard,
+  OSTTree,
+  CardType,
+  CardStatus,
+  CanvasState,
+  LayoutDirection,
+} from '@/types/ost';
 import {
   parseMarkdownToTree,
   serializeTreeToMarkdown,
@@ -16,6 +23,7 @@ interface OSTStore {
   // Derived tree (computed from markdown)
   tree: OSTTree;
   canvasState: CanvasState;
+  layoutDirection: LayoutDirection;
   selectedCardId: string | null;
   editingCardId: string | null;
 
@@ -32,6 +40,8 @@ interface OSTStore {
   // Canvas
   setZoom: (zoom: number) => void;
   setOffset: (x: number, y: number) => void;
+  setLayoutDirection: (direction: LayoutDirection) => void;
+  toggleLayoutDirection: () => void;
 
   // Tree management
   resetTree: () => void;
@@ -54,6 +64,7 @@ export const useOSTStore = create<OSTStore>()(
         zoom: 1,
         offset: { x: 0, y: 0 },
       },
+      layoutDirection: 'vertical',
       selectedCardId: null,
       editingCardId: null,
 
@@ -239,6 +250,12 @@ export const useOSTStore = create<OSTStore>()(
           canvasState: { ...state.canvasState, offset: { x, y } },
         })),
 
+      setLayoutDirection: (direction) => set({ layoutDirection: direction }),
+      toggleLayoutDirection: () =>
+        set((state) => ({
+          layoutDirection: state.layoutDirection === 'vertical' ? 'horizontal' : 'vertical',
+        })),
+
       resetTree: () => {
         const newMarkdown = createDefaultMarkdown();
         set({
@@ -301,6 +318,7 @@ export const useOSTStore = create<OSTStore>()(
       name: 'ost-storage',
       partialize: (state) => ({
         markdown: state.markdown,
+        layoutDirection: state.layoutDirection,
       }),
       onRehydrateStorage: () => (state) => {
         // Re-parse tree from markdown on rehydration

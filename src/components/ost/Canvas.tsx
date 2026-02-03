@@ -20,7 +20,17 @@ import { Button } from '@/components/ui/button';
 
 export function Canvas() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { tree, canvasState, setZoom, setOffset, addCard, moveCard, selectCard } = useOSTStore();
+  const {
+    tree,
+    canvasState,
+    setZoom,
+    setOffset,
+    addCard,
+    moveCard,
+    selectCard,
+    layoutDirection,
+  } = useOSTStore();
+  const isHorizontal = layoutDirection === 'horizontal';
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [activeCard, setActiveCard] = useState<OSTCardType | null>(null);
@@ -193,11 +203,11 @@ export function Canvas() {
                 />
               </div>
             ) : (
-              <div className="flex gap-16">
-                {tree.rootIds.map((rootId) => (
-                  <TreeNode key={rootId} cardId={rootId} />
-                ))}
-              </div>
+                <div className={cn('flex gap-16', isHorizontal && 'flex-col')}>
+                  {tree.rootIds.map((rootId) => (
+                    <TreeNode key={rootId} cardId={rootId} />
+                  ))}
+                </div>
             )}
 
             {/* Add new root outcome button */}

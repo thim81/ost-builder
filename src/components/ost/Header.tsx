@@ -1,5 +1,14 @@
 import { useState } from 'react';
-import { TreeDeciduous, Settings, Share2, RotateCcw, Code, Copy, Check } from 'lucide-react';
+import {
+  TreeDeciduous,
+  Settings,
+  Share2,
+  RotateCcw,
+  Code,
+  Copy,
+  Check,
+  ArrowRightLeft,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useOSTStore } from '@/store/ostStore';
 import { Textarea } from '@/components/ui/textarea';
@@ -26,7 +35,15 @@ import {
 } from '@/components/ui/dialog';
 
 export function Header() {
-  const { tree, resetTree, getMarkdown, setMarkdown, getShareLink } = useOSTStore();
+  const {
+    tree,
+    resetTree,
+    getMarkdown,
+    setMarkdown,
+    getShareLink,
+    layoutDirection,
+    toggleLayoutDirection,
+  } = useOSTStore();
   const [markdownEditorOpen, setMarkdownEditorOpen] = useState(false);
   const [editedMarkdown, setEditedMarkdown] = useState('');
   const [copied, setCopied] = useState(false);
@@ -127,6 +144,13 @@ export function Header() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        <Button variant="ghost" size="sm" className="gap-2" onClick={toggleLayoutDirection}>
+          <ArrowRightLeft className="w-4 h-4" />
+          <span className="hidden sm:inline">
+            {layoutDirection === 'vertical' ? 'Horizontal' : 'Vertical'}
+          </span>
+        </Button>
 
         <Button variant="ghost" size="sm" className="gap-2" onClick={handleShare}>
           <Share2 className="w-4 h-4" />
