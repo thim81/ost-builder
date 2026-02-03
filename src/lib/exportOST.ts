@@ -65,7 +65,7 @@ export async function exportOSTToPng({
         contentRect,
         currentZoom,
         currentOffsetX,
-        currentOffsetY
+        currentOffsetY,
       );
 
       content.style.transformOrigin = 'top left';
