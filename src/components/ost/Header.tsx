@@ -52,6 +52,7 @@ export function Header() {
     getShareLink,
     layoutDirection,
     toggleLayoutDirection,
+    canvasState,
   } = useOSTStore();
   const [markdownEditorOpen, setMarkdownEditorOpen] = useState(false);
   const [editedMarkdown, setEditedMarkdown] = useState('');
@@ -92,6 +93,9 @@ export function Header() {
       await exportOSTToPng({
         background: exportBackground,
         mode: exportMode,
+        currentZoom: canvasState.zoom,
+        currentOffsetX: canvasState.offset.x,
+        currentOffsetY: canvasState.offset.y,
       });
       toast({
         title: 'Export started',

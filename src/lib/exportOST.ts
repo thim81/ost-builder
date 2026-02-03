@@ -1,4 +1,5 @@
 import { toPng } from 'html-to-image';
+import { computeFitView } from '@/lib/fitView';
 
 type ExportBackground = 'grid' | 'transparent';
 type ExportMode = 'current' | 'fit';
@@ -6,6 +7,9 @@ type ExportMode = 'current' | 'fit';
 interface ExportOptions {
   background: ExportBackground;
   mode: ExportMode;
+  currentZoom: number;
+  currentOffsetX: number;
+  currentOffsetY: number;
   fileName?: string;
 }
 
@@ -16,7 +20,14 @@ function downloadDataUrl(dataUrl: string, fileName: string) {
   link.click();
 }
 
-export async function exportOSTToPng({ background, mode, fileName }: ExportOptions) {
+export async function exportOSTToPng({
+  background,
+  mode,
+  currentZoom,
+  currentOffsetX,
+  currentOffsetY,
+  fileName,
+}: ExportOptions) {
   const source = document.querySelector('[data-ost-export]') as HTMLElement | null;
   if (!source) {
     throw new Error('Export source not found.');
@@ -49,16 +60,16 @@ export async function exportOSTToPng({ background, mode, fileName }: ExportOptio
     if (mode === 'fit') {
       const sourceRect = source.getBoundingClientRect();
       const contentRect = content.getBoundingClientRect();
-      const padding = 64;
-      const width = Math.ceil(contentRect.width + padding * 2);
-      const height = Math.ceil(contentRect.height + padding * 2);
-      const translateX = Math.round(-contentRect.left + sourceRect.left + padding);
-      const translateY = Math.round(-contentRect.top + sourceRect.top + padding);
+      const { zoom, offsetX, offsetY } = computeFitView(
+        sourceRect,
+        contentRect,
+        currentZoom,
+        currentOffsetX,
+        currentOffsetY
+      );
 
-      source.style.width = `${width}px`;
-      source.style.height = `${height}px`;
       content.style.transformOrigin = 'top left';
-      content.style.transform = `translate(${translateX}px, ${translateY}px)`;
+      content.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${zoom})`;
     }
 
     if (document.fonts?.ready) {
