@@ -17,9 +17,11 @@ import { AddCardButton } from './AddCardButton';
 import { cn } from '@/lib/utils';
 import type { OSTCard as OSTCardType } from '@/types/ost';
 import { Button } from '@/components/ui/button';
+import { computeFitView } from '@/lib/fitView';
 
 export function Canvas() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const {
     tree,
     canvasState,
@@ -116,12 +118,20 @@ export function Canvas() {
   };
 
   const handleFitToScreen = () => {
-    // Center the tree in the viewport
-    if (containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect();
-      setOffset(rect.width / 4, 100);
-      setZoom(0.8);
-    }
+    if (!containerRef.current || !contentRef.current) return;
+
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const contentRect = contentRef.current.getBoundingClientRect();
+    const { zoom, offsetX, offsetY } = computeFitView(
+      containerRect,
+      contentRect,
+      canvasState.zoom,
+      canvasState.offset.x,
+      canvasState.offset.y
+    );
+
+    setZoom(zoom);
+    setOffset(offsetX, offsetY);
   };
 
   return (
@@ -163,14 +173,6 @@ export function Canvas() {
         >
           <ZoomIn className="w-4 h-4" />
         </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 px-2"
-          onClick={handleFitToScreen}
-        >
-          Fit View
-        </Button>
         <div className="w-px h-6 bg-border" />
         <Button
           variant="ghost"
@@ -204,7 +206,7 @@ export function Canvas() {
             transformOrigin: '50% 0',
           }}
         >
-          <div className="flex flex-col items-center gap-6">
+          <div ref={contentRef} className="flex flex-col items-center gap-6">
             {/* Root nodes */}
             {tree.rootIds.length === 0 ? (
               <div className="flex flex-col items-center gap-4 mt-32">
