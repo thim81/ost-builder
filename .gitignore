@@ -1,3 +1,13 @@
+# Node
 node_modules
-.idea/
 dist
+
+# Idea
+.idea/
+
+# Agents
+.codex
+.claude
+.agent
+.agents
+skills

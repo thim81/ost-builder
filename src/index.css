@@ -1,0 +1,215 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Base colors */
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 222 47% 11%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 222 84% 5%;
+    --radius: 0.75rem;
+
+    /* OST Card Type Colors */
+    --outcome: 16 100% 66%;
+    --outcome-light: 16 100% 95%;
+    --outcome-foreground: 16 80% 25%;
+
+    --opportunity: 174 72% 40%;
+    --opportunity-light: 174 72% 95%;
+    --opportunity-foreground: 174 72% 15%;
+
+    --solution: 217 91% 60%;
+    --solution-light: 217 91% 95%;
+    --solution-foreground: 217 91% 20%;
+
+    --experiment: 340 82% 52%;
+    --experiment-light: 340 82% 95%;
+    --experiment-foreground: 340 82% 20%;
+
+    /* Canvas colors */
+    --canvas-bg: 220 14% 96%;
+    --canvas-dot: 220 13% 85%;
+    --connector-line: 220 13% 75%;
+
+    /* Status colors */
+    --status-success: 142 71% 45%;
+    --status-warning: 38 92% 50%;
+    --status-next: 220 14% 60%;
+
+    /* Sidebar */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5% 26%;
+    --sidebar-primary: 240 6% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 5% 96%;
+    --sidebar-accent-foreground: 240 6% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217 91% 60%;
+  }
+
+  .dark {
+    --background: 222 47% 6%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 8%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 8%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222 47% 11%;
+
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 213 27% 84%;
+
+    --canvas-bg: 222 47% 5%;
+    --canvas-dot: 222 47% 15%;
+    --connector-line: 222 47% 30%;
+
+    --sidebar-background: 240 6% 10%;
+    --sidebar-foreground: 240 5% 96%;
+    --sidebar-primary: 224 76% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 4% 16%;
+    --sidebar-accent-foreground: 240 5% 96%;
+    --sidebar-border: 240 4% 16%;
+    --sidebar-ring: 217 91% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings:
+      'rlig' 1,
+      'calt' 1;
+  }
+}
+
+@layer components {
+  /* Canvas dotted grid background */
+  .canvas-grid {
+    background-image: radial-gradient(circle, hsl(var(--canvas-dot)) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-color: hsl(var(--canvas-bg));
+  }
+
+  /* Card type badges */
+  .badge-outcome {
+    @apply bg-outcome/15 text-outcome border-outcome/30;
+  }
+
+  .badge-opportunity {
+    @apply bg-opportunity/15 text-opportunity border-opportunity/30;
+  }
+
+  .badge-solution {
+    @apply bg-solution/15 text-solution border-solution/30;
+  }
+
+  .badge-experiment {
+    @apply bg-experiment/15 text-experiment border-experiment/30;
+  }
+
+  /* Card shadows */
+  .card-shadow {
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.04),
+      0 4px 12px rgba(0, 0, 0, 0.06);
+  }
+
+  .card-shadow-hover {
+    box-shadow:
+      0 4px 8px rgba(0, 0, 0, 0.06),
+      0 12px 24px rgba(0, 0, 0, 0.08);
+  }
+
+  .card-shadow-drag {
+    box-shadow:
+      0 8px 16px rgba(0, 0, 0, 0.1),
+      0 24px 48px rgba(0, 0, 0, 0.12);
+  }
+
+  /* Connector line styles */
+  .connector-line {
+    stroke: hsl(var(--connector-line));
+    stroke-width: 2;
+    stroke-dasharray: 6 4;
+    fill: none;
+  }
+
+  /* Add button styles by card type */
+  .add-btn-outcome {
+    @apply bg-outcome text-white hover:bg-outcome/90;
+  }
+
+  .add-btn-opportunity {
+    @apply bg-opportunity text-white hover:bg-opportunity/90;
+  }
+
+  .add-btn-solution {
+    @apply bg-solution text-white hover:bg-solution/90;
+  }
+
+  .add-btn-experiment {
+    @apply bg-experiment text-white hover:bg-experiment/90;
+  }
+}
+
+.ost-exporting [data-ost-export-exclude] {
+  display: none !important;
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
