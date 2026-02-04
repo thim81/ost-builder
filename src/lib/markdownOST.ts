@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid';
 import type { OSTCard, OSTTree, CardType, CardStatus } from '@/types/ost';
+import { DEFAULT_OST_TEMPLATE } from '@/lib/ostExamples';
 
 /**
  * Markdown OST Format:
@@ -277,26 +278,7 @@ export function serializeTreeToMarkdown(tree: OSTTree, name?: string): string {
 }
 
 export function createDefaultMarkdown(): string {
-  return `# My Opportunity Solution Tree
-
-## [Outcome] Increase user engagement by 40% @on-track
-Our primary goal for Q1 2026
-- start: 0
-- current: 28
-- target: 40
-
-### [Opportunity] Users struggle to find relevant content quickly @next
-Discovered through user interviews
-
-#### [Solution] Add personalized content recommendations @on-track
-ML-based recommendation engine
-
-##### [Experiment] A/B test recommendation widget placement @next
-Test sidebar vs. inline placement
-
-### [Opportunity] Onboarding flow is too complex
-High drop-off rate at step 3
-`;
+  return DEFAULT_OST_TEMPLATE;
 }
 
 /**

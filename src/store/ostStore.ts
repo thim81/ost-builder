@@ -48,6 +48,7 @@ interface OSTStore {
 
   // Tree management
   resetTree: () => void;
+  createNewTree: (markdown: string, name?: string) => void;
 
   // Project name
   setProjectName: (name: string) => void;
@@ -402,6 +403,19 @@ export const useOSTStore = create<OSTStore>()(
           editingCardId: null,
           canvasState: { zoom: 1, offset: { x: 0, y: 0 } },
           projectName: defaultProjectName,
+        });
+      },
+
+      createNewTree: (markdown, name) => {
+        const nextName = name?.trim() || defaultProjectName;
+        const nextMarkdown = applyProjectNameToMarkdown(markdown, nextName);
+        set({
+          markdown: nextMarkdown,
+          tree: parseMarkdownToTree(nextMarkdown),
+          projectName: nextName,
+          selectedCardId: null,
+          editingCardId: null,
+          canvasState: { zoom: 1, offset: { x: 0, y: 0 } },
         });
       },
 

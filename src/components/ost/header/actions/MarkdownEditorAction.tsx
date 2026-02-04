@@ -81,7 +81,7 @@ export function MarkdownEditorAction() {
         <DialogHeader>
           <DialogTitle>Edit Markdown Source</DialogTitle>
           <DialogDescription>
-            Edit the raw Markdown structure of your OST. Changes will update the tree when saved.
+            Edit the raw Markdown structure of your Opportunity Solution Tree. Changes will update the tree when saved.
           </DialogDescription>
         </DialogHeader>
         <div className="flex-1 min-h-0">
