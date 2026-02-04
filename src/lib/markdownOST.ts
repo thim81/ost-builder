@@ -1,24 +1,23 @@
 import { nanoid } from 'nanoid';
 import type { OSTCard, OSTTree, CardType, CardStatus } from '@/types/ost';
+import { DEFAULT_OST_TEMPLATE } from '@/lib/ostExamples';
 
 /**
  * Markdown OST Format:
  *
- * # Tree Name
- *
- * ## [Outcome] Title {#id} @status
+ * ## [Outcome] Title @status
  * Description text here
  * - start: 0
  * - current: 28
  * - target: 40
  *
- * ### [Opportunity] Title {#id} @status
+ * ### [Opportunity] Title @status
  * Description text here
  *
- * #### [Solution] Title {#id} @status
+ * #### [Solution] Title @status
  * Description text here
  *
- * ##### [Experiment] Title {#id} @status
+ * ##### [Experiment] Title @status
  * Description text here
  */
 
@@ -67,18 +66,16 @@ function parseHeadingLine(line: string): { level: number; content: string } | nu
 function parseCardHeading(
   content: string,
 ): Omit<ParsedCard, 'level' | 'description' | 'metrics'> | null {
-  // Match: [Type] Title {#id} @status or [Type] Title @status or [Type] Title {#id} or [Type] Title
+  // Match: [Type] Title @status or [Type] Title (legacy {#id} is ignored)
   const typeMatch = content.match(/^\[(Outcome|Opportunity|Solution|Experiment)\]\s+/i);
   if (!typeMatch) return null;
 
   const type = typeMatch[1].toLowerCase() as CardType;
   let remaining = content.slice(typeMatch[0].length);
 
-  // Extract ID if present
-  let id: string | null = null;
+  // Strip legacy ID tokens if present
   const idMatch = remaining.match(/\{#([^}]+)\}/);
   if (idMatch) {
-    id = idMatch[1];
     remaining = remaining.replace(idMatch[0], '').trim();
   }
 
@@ -93,7 +90,7 @@ function parseCardHeading(
   const title = remaining.trim() || `New ${type.charAt(0).toUpperCase() + type.slice(1)}`;
 
   return {
-    id: id || nanoid(),
+    id: '',
     type,
     title,
     status,
@@ -134,14 +131,23 @@ export function parseMarkdownToTree(markdown: string): OSTTree {
   const lines = markdown.split('\n');
   const tree: OSTTree = {
     id: nanoid(),
-    name: 'Untitled Tree',
+    name: 'My Opportunity Solution Tree',
     cards: {},
     rootIds: [],
   };
 
-  const parentStack: { id: string; level: number }[] = [];
+  const parentStack: { id: string; level: number; path: string; childCount: number }[] = [];
+  let rootCount = 0;
   let currentCard: ParsedCard | null = null;
   let contentLines: string[] = [];
+
+  const hashString = (value: string) => {
+    let hash = 5381;
+    for (let i = 0; i < value.length; i += 1) {
+      hash = (hash * 33) ^ value.charCodeAt(i);
+    }
+    return (hash >>> 0).toString(36);
+  };
 
   const finalizeCard = () => {
     if (!currentCard) return;
@@ -161,10 +167,16 @@ export function parseMarkdownToTree(markdown: string): OSTTree {
     ) {
       parentStack.pop();
     }
-    const parentId = parentStack.length > 0 ? parentStack[parentStack.length - 1].id : null;
+    const parentEntry = parentStack.length > 0 ? parentStack[parentStack.length - 1] : null;
+    const parentId = parentEntry ? parentEntry.id : null;
+    const index = parentEntry ? parentEntry.childCount : rootCount;
+    const path = parentEntry
+      ? `${parentEntry.path}/${currentCard.type}.${index}`
+      : `root.${index}/${currentCard.type}`;
+    const id = `n_${hashString(`${path}|${currentCard.type}|${currentCard.title}`)}`;
 
     const card: OSTCard = {
-      id: currentCard.id,
+      id,
       type: currentCard.type,
       title: currentCard.title,
       description,
@@ -184,7 +196,18 @@ export function parseMarkdownToTree(markdown: string): OSTTree {
       tree.rootIds.push(card.id);
     }
 
-    parentStack.push({ id: card.id, level: currentCard.level });
+    if (parentEntry) {
+      parentEntry.childCount += 1;
+    } else {
+      rootCount += 1;
+    }
+
+    parentStack.push({
+      id: card.id,
+      level: currentCard.level,
+      path,
+      childCount: 0,
+    });
     currentCard = null;
     contentLines = [];
   };
@@ -193,13 +216,6 @@ export function parseMarkdownToTree(markdown: string): OSTTree {
     const heading = parseHeadingLine(line);
 
     if (heading) {
-      // H1 is the tree name
-      if (heading.level === 1) {
-        finalizeCard();
-        tree.name = heading.content.trim();
-        continue;
-      }
-
       // H2-H5 are card headings
       const cardInfo = parseCardHeading(heading.content);
       if (cardInfo) {
@@ -218,10 +234,12 @@ export function parseMarkdownToTree(markdown: string): OSTTree {
   return tree;
 }
 
-export function serializeTreeToMarkdown(tree: OSTTree): string {
+export function serializeTreeToMarkdown(tree: OSTTree, name?: string): string {
   const lines: string[] = [];
-  lines.push(`# ${tree.name}`);
-  lines.push('');
+  if (name) {
+    lines.push(`# ${name}`);
+    lines.push('');
+  }
 
   const serializeCard = (cardId: string) => {
     const card = tree.cards[cardId];
@@ -230,7 +248,7 @@ export function serializeTreeToMarkdown(tree: OSTTree): string {
     const level = HEADING_LEVELS[card.type];
     const prefix = TYPE_PREFIXES[card.type];
     const statusSuffix = card.status && card.status !== 'none' ? ` @${card.status}` : '';
-    const heading = `${'#'.repeat(level)} ${prefix} ${card.title} {#${card.id}}${statusSuffix}`;
+    const heading = `${'#'.repeat(level)} ${prefix} ${card.title}${statusSuffix}`;
 
     lines.push(heading);
 
@@ -260,26 +278,7 @@ export function serializeTreeToMarkdown(tree: OSTTree): string {
 }
 
 export function createDefaultMarkdown(): string {
-  return `# My Opportunity Solution Tree
-
-## [Outcome] Increase user engagement by 40% @on-track
-Our primary goal for Q1 2026
-- start: 0
-- current: 28
-- target: 40
-
-### [Opportunity] Users struggle to find relevant content quickly @next
-Discovered through user interviews
-
-#### [Solution] Add personalized content recommendations @on-track
-ML-based recommendation engine
-
-##### [Experiment] A/B test recommendation widget placement @next
-Test sidebar vs. inline placement
-
-### [Opportunity] Onboarding flow is too complex
-High drop-off rate at step 3
-`;
+  return DEFAULT_OST_TEMPLATE;
 }
 
 /**
@@ -288,11 +287,16 @@ High drop-off rate at step 3
  * Encodes markdown into a URL-safe fragment string.
  * We use base64url over UTF-8. (No compression; keeps deps at zero.)
  *
- * Typical use: `${location.pathname}#${encodeMarkdownToUrlFragment(markdown)}`
+ * Typical use: `${location.pathname}#${encodeMarkdownToUrlFragment(markdown, name)}`
  */
-export function encodeMarkdownToUrlFragment(markdown: string): string {
+export function encodeMarkdownToUrlFragment(markdown: string, name?: string): string {
+  const payload = JSON.stringify({ v: 1, m: markdown, n: name || '' });
+  return encodeStringToUrlFragment(payload);
+}
+
+function encodeStringToUrlFragment(value: string): string {
   // Convert UTF-8 bytes -> base64
-  const bytes = new TextEncoder().encode(markdown);
+  const bytes = new TextEncoder().encode(value);
   let binary = '';
   for (let i = 0; i < bytes.length; i++) {
     binary += String.fromCharCode(bytes[i]);
@@ -307,24 +311,42 @@ export function encodeMarkdownToUrlFragment(markdown: string): string {
  * Decodes a URL fragment produced by `encodeMarkdownToUrlFragment`.
  * Returns `null` when decoding fails.
  */
-export function decodeMarkdownFromUrlFragment(fragment: string): string | null {
+export function decodeMarkdownFromUrlFragment(
+  fragment: string,
+): { markdown: string; name?: string } | null {
   try {
     if (!fragment) return null;
 
-    // base64url -> base64
-    let base64 = fragment.replace(/-/g, '+').replace(/_/g, '/');
-    // Pad to multiple of 4
-    const pad = base64.length % 4;
-    if (pad) base64 += '='.repeat(4 - pad);
+    const decoded = decodeStringFromUrlFragment(fragment);
+    if (!decoded) return null;
 
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      bytes[i] = binary.charCodeAt(i);
+    try {
+      const parsed = JSON.parse(decoded) as { v?: number; m?: string; n?: string };
+      if (typeof parsed?.m === 'string') {
+        return { markdown: parsed.m, name: parsed.n || undefined };
+      }
+    } catch {
+      // Fall through to legacy format.
     }
 
-    return new TextDecoder().decode(bytes);
+    return { markdown: decoded };
   } catch {
     return null;
   }
+}
+
+function decodeStringFromUrlFragment(fragment: string): string | null {
+  // base64url -> base64
+  let base64 = fragment.replace(/-/g, '+').replace(/_/g, '/');
+  // Pad to multiple of 4
+  const pad = base64.length % 4;
+  if (pad) base64 += '='.repeat(4 - pad);
+
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+
+  return new TextDecoder().decode(bytes);
 }

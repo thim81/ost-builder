@@ -22,8 +22,11 @@ interface OSTStore {
   markdown: string;
   // Derived tree (computed from markdown)
   tree: OSTTree;
+  projectName: string;
   canvasState: CanvasState;
   layoutDirection: LayoutDirection;
+  experimentLayout: 'horizontal' | 'vertical';
+  viewDensity: 'full' | 'compact';
   selectedCardId: string | null;
   editingCardId: string | null;
 
@@ -32,6 +35,8 @@ interface OSTStore {
   updateCard: (id: string, updates: Partial<OSTCard>) => void;
   deleteCard: (id: string) => void;
   moveCard: (cardId: string, newParentId: string | null) => void;
+  copyCard: (cardId: string) => string | null;
+  copyCardWithChildren: (cardId: string) => string | null;
 
   // Selection
   selectCard: (id: string | null) => void;
@@ -42,9 +47,15 @@ interface OSTStore {
   setOffset: (x: number, y: number) => void;
   setLayoutDirection: (direction: LayoutDirection) => void;
   toggleLayoutDirection: () => void;
+  setExperimentLayout: (layout: 'horizontal' | 'vertical') => void;
+  setViewDensity: (density: 'full' | 'compact') => void;
 
   // Tree management
   resetTree: () => void;
+  createNewTree: (markdown: string, name?: string) => void;
+
+  // Project name
+  setProjectName: (name: string) => void;
 
   // Markdown operations
   getMarkdown: () => string;
@@ -54,17 +65,42 @@ interface OSTStore {
 }
 
 const defaultMarkdown = createDefaultMarkdown();
+const defaultProjectName = 'My Opportunity Solution Tree';
+
+const applyProjectNameToMarkdown = (markdown: string, name: string) => {
+  const safeName = name.trim() || defaultProjectName;
+  const lines = markdown.split('\n');
+  const hasHeading = lines[0]?.startsWith('# ');
+  if (hasHeading) {
+    lines[0] = `# ${safeName}`;
+    return lines.join('\n');
+  }
+
+  return [`# ${safeName}`, '', markdown].join('\n').trimStart();
+};
+
+const extractProjectNameFromMarkdown = (markdown: string) => {
+  const firstLine = markdown.split('\n')[0]?.trim() || '';
+  if (firstLine.startsWith('# ')) {
+    const name = firstLine.slice(2).trim();
+    return name || defaultProjectName;
+  }
+  return defaultProjectName;
+};
 
 export const useOSTStore = create<OSTStore>()(
   persist(
     (set, get) => ({
       markdown: defaultMarkdown,
       tree: parseMarkdownToTree(defaultMarkdown),
+      projectName: defaultProjectName,
       canvasState: {
         zoom: 1,
         offset: { x: 0, y: 0 },
       },
       layoutDirection: 'vertical',
+      experimentLayout: 'vertical',
+      viewDensity: 'full',
       selectedCardId: null,
       editingCardId: null,
 
@@ -102,7 +138,7 @@ export const useOSTStore = create<OSTStore>()(
           const rootIds = parentId ? state.tree.rootIds : [...state.tree.rootIds, id];
 
           const newTree = { ...state.tree, cards, rootIds };
-          const newMarkdown = serializeTreeToMarkdown(newTree);
+          const newMarkdown = serializeTreeToMarkdown(newTree, state.projectName);
 
           return {
             tree: newTree,
@@ -127,7 +163,7 @@ export const useOSTStore = create<OSTStore>()(
               },
             },
           };
-          const newMarkdown = serializeTreeToMarkdown(newTree);
+          const newMarkdown = serializeTreeToMarkdown(newTree, state.projectName);
 
           return {
             tree: newTree,
@@ -166,7 +202,7 @@ export const useOSTStore = create<OSTStore>()(
           const rootIds = state.tree.rootIds.filter((rid) => !toDelete.has(rid));
 
           const newTree = { ...state.tree, cards, rootIds };
-          const newMarkdown = serializeTreeToMarkdown(newTree);
+          const newMarkdown = serializeTreeToMarkdown(newTree, state.projectName);
 
           return {
             tree: newTree,
@@ -228,13 +264,110 @@ export const useOSTStore = create<OSTStore>()(
           }
 
           const newTree = { ...state.tree, cards, rootIds };
-          const newMarkdown = serializeTreeToMarkdown(newTree);
+          const newMarkdown = serializeTreeToMarkdown(newTree, state.projectName);
 
           return {
             tree: newTree,
             markdown: newMarkdown,
           };
         });
+      },
+
+      copyCard: (cardId) => {
+        const state = get();
+        const original = state.tree.cards[cardId];
+        if (!original) return null;
+
+        const id = nanoid();
+        const copied: OSTCard = {
+          ...original,
+          id,
+          children: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        const cards = { ...state.tree.cards, [id]: copied };
+        let rootIds = [...state.tree.rootIds];
+
+        if (original.parentId && cards[original.parentId]) {
+          const siblings = cards[original.parentId].children;
+          const insertIndex = Math.max(0, siblings.indexOf(original.id) + 1);
+          const nextChildren = [...siblings];
+          nextChildren.splice(insertIndex, 0, id);
+          cards[original.parentId] = {
+            ...cards[original.parentId],
+            children: nextChildren,
+          };
+        } else {
+          const insertIndex = Math.max(0, rootIds.indexOf(original.id) + 1);
+          rootIds.splice(insertIndex, 0, id);
+        }
+
+        const newTree = { ...state.tree, cards, rootIds };
+        const newMarkdown = serializeTreeToMarkdown(newTree, state.projectName);
+
+        set({
+          tree: newTree,
+          markdown: newMarkdown,
+        });
+
+        return id;
+      },
+
+      copyCardWithChildren: (cardId) => {
+        const state = get();
+        const original = state.tree.cards[cardId];
+        if (!original) return null;
+
+        const cards = { ...state.tree.cards };
+
+        const cloneSubtree = (sourceId: string, parentId: string | null): string => {
+          const source = state.tree.cards[sourceId];
+          const id = nanoid();
+          const cloned: OSTCard = {
+            ...source,
+            id,
+            parentId,
+            children: [],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+
+          cards[id] = cloned;
+
+          const childIds = source.children.map((childId) => cloneSubtree(childId, id));
+          cloned.children = childIds;
+
+          return id;
+        };
+
+        const newRootId = cloneSubtree(original.id, original.parentId);
+        let rootIds = [...state.tree.rootIds];
+
+        if (original.parentId && cards[original.parentId]) {
+          const siblings = cards[original.parentId].children;
+          const insertIndex = Math.max(0, siblings.indexOf(original.id) + 1);
+          const nextChildren = [...siblings];
+          nextChildren.splice(insertIndex, 0, newRootId);
+          cards[original.parentId] = {
+            ...cards[original.parentId],
+            children: nextChildren,
+          };
+        } else {
+          const insertIndex = Math.max(0, rootIds.indexOf(original.id) + 1);
+          rootIds.splice(insertIndex, 0, newRootId);
+        }
+
+        const newTree = { ...state.tree, cards, rootIds };
+        const newMarkdown = serializeTreeToMarkdown(newTree, state.projectName);
+
+        set({
+          tree: newTree,
+          markdown: newMarkdown,
+        });
+
+        return newRootId;
       },
 
       selectCard: (id) => set({ selectedCardId: id }),
@@ -255,12 +388,39 @@ export const useOSTStore = create<OSTStore>()(
         set((state) => ({
           layoutDirection: state.layoutDirection === 'vertical' ? 'horizontal' : 'vertical',
         })),
+      setExperimentLayout: (layout) => set({ experimentLayout: layout }),
+      setViewDensity: (density) => set({ viewDensity: density }),
+
+      setProjectName: (name) =>
+        set((state) => {
+          const nextName = name.trim() || defaultProjectName;
+          const nextMarkdown = applyProjectNameToMarkdown(state.markdown, nextName);
+          return {
+            projectName: nextName,
+            markdown: nextMarkdown,
+            tree: parseMarkdownToTree(nextMarkdown),
+          };
+        }),
 
       resetTree: () => {
         const newMarkdown = createDefaultMarkdown();
         set({
           markdown: newMarkdown,
           tree: parseMarkdownToTree(newMarkdown),
+          selectedCardId: null,
+          editingCardId: null,
+          canvasState: { zoom: 1, offset: { x: 0, y: 0 } },
+          projectName: defaultProjectName,
+        });
+      },
+
+      createNewTree: (markdown, name) => {
+        const nextName = name?.trim() || defaultProjectName;
+        const nextMarkdown = applyProjectNameToMarkdown(markdown, nextName);
+        set({
+          markdown: nextMarkdown,
+          tree: parseMarkdownToTree(nextMarkdown),
+          projectName: nextName,
           selectedCardId: null,
           editingCardId: null,
           canvasState: { zoom: 1, offset: { x: 0, y: 0 } },
@@ -271,7 +431,7 @@ export const useOSTStore = create<OSTStore>()(
       getShareLink: () => {
         // URL fragment is client-side only and doesn't hit the server.
         // NOTE: long trees can still exceed browser URL limits.
-        const fragment = encodeMarkdownToUrlFragment(get().markdown);
+        const fragment = encodeMarkdownToUrlFragment(get().markdown, get().projectName);
 
         // Use current location if available (browser), otherwise return fragment-only.
         if (typeof window !== 'undefined') {
@@ -295,9 +455,15 @@ export const useOSTStore = create<OSTStore>()(
         const decoded = decodeMarkdownFromUrlFragment(fragment);
         if (!decoded) return false;
 
+        const rawMarkdown = decoded.markdown;
+        const nextName = decoded.name || defaultProjectName;
+        const nextMarkdown = applyProjectNameToMarkdown(rawMarkdown, nextName);
+        const nextTree = parseMarkdownToTree(nextMarkdown);
+
         set({
-          markdown: decoded,
-          tree: parseMarkdownToTree(decoded),
+          markdown: nextMarkdown,
+          tree: nextTree,
+          projectName: nextName,
           selectedCardId: null,
           editingCardId: null,
         });
@@ -309,6 +475,7 @@ export const useOSTStore = create<OSTStore>()(
         set({
           markdown,
           tree: parseMarkdownToTree(markdown),
+          projectName: extractProjectNameFromMarkdown(markdown),
           selectedCardId: null,
           editingCardId: null,
         });
@@ -318,12 +485,18 @@ export const useOSTStore = create<OSTStore>()(
       name: 'ost-storage',
       partialize: (state) => ({
         markdown: state.markdown,
+        projectName: state.projectName,
         layoutDirection: state.layoutDirection,
+        experimentLayout: state.experimentLayout,
+        viewDensity: state.viewDensity,
       }),
       onRehydrateStorage: () => (state) => {
         // Re-parse tree from markdown on rehydration
         if (state && state.markdown) {
           state.tree = parseMarkdownToTree(state.markdown);
+        }
+        if (state && !state.projectName) {
+          state.projectName = defaultProjectName;
         }
       },
     },
