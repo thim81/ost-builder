@@ -7,9 +7,13 @@ export function LayoutToggleAction() {
 
   return (
     <Button variant="ghost" size="sm" className="gap-2" onClick={toggleLayoutDirection}>
-      <ArrowRightLeft className="w-4 h-4" />
+      <ArrowRightLeft
+        className={`w-4 h-4 ${
+          layoutDirection === 'vertical' ? 'rotate-90' : 'rotate-0'
+        } transition-transform`}
+      />
       <span className="hidden sm:inline">
-        {layoutDirection === 'vertical' ? 'Horizontal' : 'Vertical'}
+        {layoutDirection === 'vertical' ? 'Vertical':'Horizontal' }
       </span>
     </Button>
   );

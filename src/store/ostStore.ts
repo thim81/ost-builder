@@ -25,6 +25,7 @@ interface OSTStore {
   projectName: string;
   canvasState: CanvasState;
   layoutDirection: LayoutDirection;
+  experimentLayout: 'horizontal' | 'vertical';
   selectedCardId: string | null;
   editingCardId: string | null;
 
@@ -45,6 +46,7 @@ interface OSTStore {
   setOffset: (x: number, y: number) => void;
   setLayoutDirection: (direction: LayoutDirection) => void;
   toggleLayoutDirection: () => void;
+  setExperimentLayout: (layout: 'horizontal' | 'vertical') => void;
 
   // Tree management
   resetTree: () => void;
@@ -95,6 +97,7 @@ export const useOSTStore = create<OSTStore>()(
         offset: { x: 0, y: 0 },
       },
       layoutDirection: 'vertical',
+      experimentLayout: 'vertical',
       selectedCardId: null,
       editingCardId: null,
 
@@ -382,6 +385,7 @@ export const useOSTStore = create<OSTStore>()(
         set((state) => ({
           layoutDirection: state.layoutDirection === 'vertical' ? 'horizontal' : 'vertical',
         })),
+      setExperimentLayout: (layout) => set({ experimentLayout: layout }),
 
       setProjectName: (name) =>
         set((state) => {
@@ -479,6 +483,7 @@ export const useOSTStore = create<OSTStore>()(
         markdown: state.markdown,
         projectName: state.projectName,
         layoutDirection: state.layoutDirection,
+        experimentLayout: state.experimentLayout,
       }),
       onRehydrateStorage: () => (state) => {
         // Re-parse tree from markdown on rehydration
