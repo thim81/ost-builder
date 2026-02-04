@@ -24,7 +24,7 @@ Live demo: [https://ost-builder.pages.dev](https://ost-builder.pages.dev)
 
 Many product managers are familiar with Opportunity Solution Trees through Teresa Torres’ *Continuous Discovery Habits*, but applying them in practice can still be challenging. While the concept is powerful, working with templates and slides (like Miro or decks) often feels time‑consuming tweaking to make it look good when all you want is a clear, readable OST.
 
-After Hustle Badger’s examples made the structure finally click for me, the remaining gap was tooling. I wanted something lightweight and fast, allowing to focus on thinking instead of formatting.
+The goal was a visual tool, something lightweight and fast, allowing to focus on thinking instead of formatting.
 
 With OST-builder I can type Markdown or add Opportunities/Solutions directly, share it with teammates, and call it a day. And because it’s Markdown, it works great with AI assistants & LLMs too.
 
