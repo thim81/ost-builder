@@ -38,6 +38,10 @@ export async function exportOSTToPng({
   if (!content) {
     throw new Error('Export content not found.');
   }
+  const bounds = source.querySelector('[data-ost-export-bounds]') as HTMLElement | null;
+  if (!bounds) {
+    throw new Error('Export bounds not found.');
+  }
 
   const originalOverflow = source.style.overflow;
   const originalBackground = source.style.background;
@@ -94,7 +98,7 @@ export async function exportOSTToPng({
 
     if (mode === 'fit') {
       const sourceRect = source.getBoundingClientRect();
-      const contentRect = content.getBoundingClientRect();
+      const contentRect = bounds.getBoundingClientRect();
       const { zoom, offsetX, offsetY } = computeFitView(
         sourceRect,
         contentRect,
@@ -103,8 +107,20 @@ export async function exportOSTToPng({
         currentOffsetY,
       );
 
-      content.style.transformOrigin = 'top left';
       content.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${zoom})`;
+
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+
+      const secondSourceRect = source.getBoundingClientRect();
+      const secondContentRect = bounds.getBoundingClientRect();
+      const second = computeFitView(
+        secondSourceRect,
+        secondContentRect,
+        zoom,
+        offsetX,
+        offsetY,
+      );
+      content.style.transform = `translate(${second.offsetX}px, ${second.offsetY}px) scale(${second.zoom})`;
     }
 
     if (document.fonts?.ready) {

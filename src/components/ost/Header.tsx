@@ -22,8 +22,8 @@ export function Header() {
         <MarkdownEditorAction />
         <CreateNewAction />
         <ResetAction />
-        <ExportAction />
         <LayoutToggleAction />
+        <ExportAction />
         <ShareAction />
         <SettingsAction />
       </div>

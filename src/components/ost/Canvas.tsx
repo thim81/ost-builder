@@ -36,6 +36,7 @@ export function Canvas() {
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [activeCard, setActiveCard] = useState<OSTCardType | null>(null);
+  const fitInProgressRef = useRef(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -119,19 +120,38 @@ export function Canvas() {
 
   const handleFitToScreen = () => {
     if (!containerRef.current || !contentRef.current) return;
+    if (fitInProgressRef.current) return;
+    fitInProgressRef.current = true;
 
     const containerRect = containerRef.current.getBoundingClientRect();
     const contentRect = contentRef.current.getBoundingClientRect();
+    const currentState = useOSTStore.getState().canvasState;
     const { zoom, offsetX, offsetY } = computeFitView(
       containerRect,
       contentRect,
-      canvasState.zoom,
-      canvasState.offset.x,
-      canvasState.offset.y
+      currentState.zoom,
+      currentState.offset.x,
+      currentState.offset.y
     );
 
     setZoom(zoom);
     setOffset(offsetX, offsetY);
+    requestAnimationFrame(() => {
+      if (!containerRef.current || !contentRef.current) return;
+      const nextContainerRect = containerRef.current.getBoundingClientRect();
+      const nextContentRect = contentRef.current.getBoundingClientRect();
+      const nextState = useOSTStore.getState().canvasState;
+      const next = computeFitView(
+        nextContainerRect,
+        nextContentRect,
+        nextState.zoom,
+        nextState.offset.x,
+        nextState.offset.y
+      );
+      setZoom(next.zoom);
+      setOffset(next.offsetX, next.offsetY);
+      fitInProgressRef.current = false;
+    });
   };
 
   return (
@@ -206,7 +226,11 @@ export function Canvas() {
             transformOrigin: '50% 0',
           }}
         >
-          <div ref={contentRef} className="flex flex-col items-center gap-6">
+          <div
+            ref={contentRef}
+            data-ost-export-bounds
+            className="flex flex-col items-center gap-6"
+          >
             {/* Root nodes */}
             {tree.rootIds.length === 0 ? (
               <div className="flex flex-col items-center gap-4 mt-32">
