@@ -6,19 +6,19 @@ import type { OSTCard, OSTTree, CardType, CardStatus } from '@/types/ost';
  *
  * # Tree Name
  *
- * ## [Outcome] Title {#id} @status
+ * ## [Outcome] Title @status
  * Description text here
  * - start: 0
  * - current: 28
  * - target: 40
  *
- * ### [Opportunity] Title {#id} @status
+ * ### [Opportunity] Title @status
  * Description text here
  *
- * #### [Solution] Title {#id} @status
+ * #### [Solution] Title @status
  * Description text here
  *
- * ##### [Experiment] Title {#id} @status
+ * ##### [Experiment] Title @status
  * Description text here
  */
 
@@ -67,18 +67,16 @@ function parseHeadingLine(line: string): { level: number; content: string } | nu
 function parseCardHeading(
   content: string,
 ): Omit<ParsedCard, 'level' | 'description' | 'metrics'> | null {
-  // Match: [Type] Title {#id} @status or [Type] Title @status or [Type] Title {#id} or [Type] Title
+  // Match: [Type] Title @status or [Type] Title (legacy {#id} is ignored)
   const typeMatch = content.match(/^\[(Outcome|Opportunity|Solution|Experiment)\]\s+/i);
   if (!typeMatch) return null;
 
   const type = typeMatch[1].toLowerCase() as CardType;
   let remaining = content.slice(typeMatch[0].length);
 
-  // Extract ID if present
-  let id: string | null = null;
+  // Strip legacy ID tokens if present
   const idMatch = remaining.match(/\{#([^}]+)\}/);
   if (idMatch) {
-    id = idMatch[1];
     remaining = remaining.replace(idMatch[0], '').trim();
   }
 
@@ -93,7 +91,7 @@ function parseCardHeading(
   const title = remaining.trim() || `New ${type.charAt(0).toUpperCase() + type.slice(1)}`;
 
   return {
-    id: id || nanoid(),
+    id: '',
     type,
     title,
     status,
@@ -139,9 +137,18 @@ export function parseMarkdownToTree(markdown: string): OSTTree {
     rootIds: [],
   };
 
-  const parentStack: { id: string; level: number }[] = [];
+  const parentStack: { id: string; level: number; path: string; childCount: number }[] = [];
+  let rootCount = 0;
   let currentCard: ParsedCard | null = null;
   let contentLines: string[] = [];
+
+  const hashString = (value: string) => {
+    let hash = 5381;
+    for (let i = 0; i < value.length; i += 1) {
+      hash = (hash * 33) ^ value.charCodeAt(i);
+    }
+    return (hash >>> 0).toString(36);
+  };
 
   const finalizeCard = () => {
     if (!currentCard) return;
@@ -161,10 +168,16 @@ export function parseMarkdownToTree(markdown: string): OSTTree {
     ) {
       parentStack.pop();
     }
-    const parentId = parentStack.length > 0 ? parentStack[parentStack.length - 1].id : null;
+    const parentEntry = parentStack.length > 0 ? parentStack[parentStack.length - 1] : null;
+    const parentId = parentEntry ? parentEntry.id : null;
+    const index = parentEntry ? parentEntry.childCount : rootCount;
+    const path = parentEntry
+      ? `${parentEntry.path}/${currentCard.type}.${index}`
+      : `root.${index}/${currentCard.type}`;
+    const id = `n_${hashString(`${path}|${currentCard.type}|${currentCard.title}`)}`;
 
     const card: OSTCard = {
-      id: currentCard.id,
+      id,
       type: currentCard.type,
       title: currentCard.title,
       description,
@@ -184,7 +197,18 @@ export function parseMarkdownToTree(markdown: string): OSTTree {
       tree.rootIds.push(card.id);
     }
 
-    parentStack.push({ id: card.id, level: currentCard.level });
+    if (parentEntry) {
+      parentEntry.childCount += 1;
+    } else {
+      rootCount += 1;
+    }
+
+    parentStack.push({
+      id: card.id,
+      level: currentCard.level,
+      path,
+      childCount: 0,
+    });
     currentCard = null;
     contentLines = [];
   };
@@ -230,7 +254,7 @@ export function serializeTreeToMarkdown(tree: OSTTree): string {
     const level = HEADING_LEVELS[card.type];
     const prefix = TYPE_PREFIXES[card.type];
     const statusSuffix = card.status && card.status !== 'none' ? ` @${card.status}` : '';
-    const heading = `${'#'.repeat(level)} ${prefix} ${card.title} {#${card.id}}${statusSuffix}`;
+    const heading = `${'#'.repeat(level)} ${prefix} ${card.title}${statusSuffix}`;
 
     lines.push(heading);
 
