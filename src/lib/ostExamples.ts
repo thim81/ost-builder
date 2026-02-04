@@ -110,7 +110,7 @@ Show cited links and explain uncertainty
   },
   {
     id: 'example-hustlebadger-onboarding',
-    name: 'Increase user base (Hustlebadger)',
+    name: 'Increase user base',
     description: 'One outcome with three opportunities and solution ideas.',
     markdown: `# Increase our user base
 
