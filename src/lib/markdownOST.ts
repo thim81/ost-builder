@@ -4,8 +4,6 @@ import type { OSTCard, OSTTree, CardType, CardStatus } from '@/types/ost';
 /**
  * Markdown OST Format:
  *
- * # Tree Name
- *
  * ## [Outcome] Title @status
  * Description text here
  * - start: 0
@@ -132,7 +130,7 @@ export function parseMarkdownToTree(markdown: string): OSTTree {
   const lines = markdown.split('\n');
   const tree: OSTTree = {
     id: nanoid(),
-    name: 'Untitled Tree',
+    name: 'My Opportunity Solution Tree',
     cards: {},
     rootIds: [],
   };
@@ -217,13 +215,6 @@ export function parseMarkdownToTree(markdown: string): OSTTree {
     const heading = parseHeadingLine(line);
 
     if (heading) {
-      // H1 is the tree name
-      if (heading.level === 1) {
-        finalizeCard();
-        tree.name = heading.content.trim();
-        continue;
-      }
-
       // H2-H5 are card headings
       const cardInfo = parseCardHeading(heading.content);
       if (cardInfo) {
@@ -244,8 +235,6 @@ export function parseMarkdownToTree(markdown: string): OSTTree {
 
 export function serializeTreeToMarkdown(tree: OSTTree): string {
   const lines: string[] = [];
-  lines.push(`# ${tree.name}`);
-  lines.push('');
 
   const serializeCard = (cardId: string) => {
     const card = tree.cards[cardId];
@@ -284,9 +273,7 @@ export function serializeTreeToMarkdown(tree: OSTTree): string {
 }
 
 export function createDefaultMarkdown(): string {
-  return `# My Opportunity Solution Tree
-
-## [Outcome] Increase user engagement by 40% @on-track
+  return `## [Outcome] Increase user engagement by 40% @on-track
 Our primary goal for Q1 2026
 - start: 0
 - current: 28
@@ -312,11 +299,16 @@ High drop-off rate at step 3
  * Encodes markdown into a URL-safe fragment string.
  * We use base64url over UTF-8. (No compression; keeps deps at zero.)
  *
- * Typical use: `${location.pathname}#${encodeMarkdownToUrlFragment(markdown)}`
+ * Typical use: `${location.pathname}#${encodeMarkdownToUrlFragment(markdown, name)}`
  */
-export function encodeMarkdownToUrlFragment(markdown: string): string {
+export function encodeMarkdownToUrlFragment(markdown: string, name?: string): string {
+  const payload = JSON.stringify({ v: 1, m: markdown, n: name || '' });
+  return encodeStringToUrlFragment(payload);
+}
+
+function encodeStringToUrlFragment(value: string): string {
   // Convert UTF-8 bytes -> base64
-  const bytes = new TextEncoder().encode(markdown);
+  const bytes = new TextEncoder().encode(value);
   let binary = '';
   for (let i = 0; i < bytes.length; i++) {
     binary += String.fromCharCode(bytes[i]);
@@ -331,24 +323,42 @@ export function encodeMarkdownToUrlFragment(markdown: string): string {
  * Decodes a URL fragment produced by `encodeMarkdownToUrlFragment`.
  * Returns `null` when decoding fails.
  */
-export function decodeMarkdownFromUrlFragment(fragment: string): string | null {
+export function decodeMarkdownFromUrlFragment(
+  fragment: string,
+): { markdown: string; name?: string } | null {
   try {
     if (!fragment) return null;
 
-    // base64url -> base64
-    let base64 = fragment.replace(/-/g, '+').replace(/_/g, '/');
-    // Pad to multiple of 4
-    const pad = base64.length % 4;
-    if (pad) base64 += '='.repeat(4 - pad);
+    const decoded = decodeStringFromUrlFragment(fragment);
+    if (!decoded) return null;
 
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      bytes[i] = binary.charCodeAt(i);
+    try {
+      const parsed = JSON.parse(decoded) as { v?: number; m?: string; n?: string };
+      if (typeof parsed?.m === 'string') {
+        return { markdown: parsed.m, name: parsed.n || undefined };
+      }
+    } catch {
+      // Fall through to legacy format.
     }
 
-    return new TextDecoder().decode(bytes);
+    return { markdown: decoded };
   } catch {
     return null;
   }
+}
+
+function decodeStringFromUrlFragment(fragment: string): string | null {
+  // base64url -> base64
+  let base64 = fragment.replace(/-/g, '+').replace(/_/g, '/');
+  // Pad to multiple of 4
+  const pad = base64.length % 4;
+  if (pad) base64 += '='.repeat(4 - pad);
+
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+
+  return new TextDecoder().decode(bytes);
 }

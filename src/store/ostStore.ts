@@ -22,6 +22,7 @@ interface OSTStore {
   markdown: string;
   // Derived tree (computed from markdown)
   tree: OSTTree;
+  projectName: string;
   canvasState: CanvasState;
   layoutDirection: LayoutDirection;
   selectedCardId: string | null;
@@ -46,6 +47,9 @@ interface OSTStore {
   // Tree management
   resetTree: () => void;
 
+  // Project name
+  setProjectName: (name: string) => void;
+
   // Markdown operations
   getMarkdown: () => string;
   setMarkdown: (markdown: string) => void;
@@ -54,12 +58,14 @@ interface OSTStore {
 }
 
 const defaultMarkdown = createDefaultMarkdown();
+const defaultProjectName = 'My Opportunity Solution Tree';
 
 export const useOSTStore = create<OSTStore>()(
   persist(
     (set, get) => ({
       markdown: defaultMarkdown,
       tree: parseMarkdownToTree(defaultMarkdown),
+      projectName: defaultProjectName,
       canvasState: {
         zoom: 1,
         offset: { x: 0, y: 0 },
@@ -256,6 +262,11 @@ export const useOSTStore = create<OSTStore>()(
           layoutDirection: state.layoutDirection === 'vertical' ? 'horizontal' : 'vertical',
         })),
 
+      setProjectName: (name) =>
+        set({
+          projectName: name.trim() || defaultProjectName,
+        }),
+
       resetTree: () => {
         const newMarkdown = createDefaultMarkdown();
         set({
@@ -264,6 +275,7 @@ export const useOSTStore = create<OSTStore>()(
           selectedCardId: null,
           editingCardId: null,
           canvasState: { zoom: 1, offset: { x: 0, y: 0 } },
+          projectName: defaultProjectName,
         });
       },
 
@@ -271,7 +283,7 @@ export const useOSTStore = create<OSTStore>()(
       getShareLink: () => {
         // URL fragment is client-side only and doesn't hit the server.
         // NOTE: long trees can still exceed browser URL limits.
-        const fragment = encodeMarkdownToUrlFragment(get().markdown);
+        const fragment = encodeMarkdownToUrlFragment(get().markdown, get().projectName);
 
         // Use current location if available (browser), otherwise return fragment-only.
         if (typeof window !== 'undefined') {
@@ -295,9 +307,15 @@ export const useOSTStore = create<OSTStore>()(
         const decoded = decodeMarkdownFromUrlFragment(fragment);
         if (!decoded) return false;
 
+        const nextTree = parseMarkdownToTree(decoded.markdown);
+        const nextName =
+          decoded.name ||
+          (nextTree.name && nextTree.name !== 'Untitled Tree' ? nextTree.name : defaultProjectName);
+
         set({
-          markdown: decoded,
-          tree: parseMarkdownToTree(decoded),
+          markdown: decoded.markdown,
+          tree: nextTree,
+          projectName: nextName,
           selectedCardId: null,
           editingCardId: null,
         });
@@ -318,12 +336,16 @@ export const useOSTStore = create<OSTStore>()(
       name: 'ost-storage',
       partialize: (state) => ({
         markdown: state.markdown,
+        projectName: state.projectName,
         layoutDirection: state.layoutDirection,
       }),
       onRehydrateStorage: () => (state) => {
         // Re-parse tree from markdown on rehydration
         if (state && state.markdown) {
           state.tree = parseMarkdownToTree(state.markdown);
+        }
+        if (state && !state.projectName) {
+          state.projectName = defaultProjectName;
         }
       },
     },
