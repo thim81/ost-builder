@@ -82,6 +82,7 @@ export function OSTCard({ card, isDragging }: OSTCardProps) {
     updateCard,
     deleteCard,
     copyCard,
+    copyCardWithChildren,
   } = useOSTStore();
   const [editTitle, setEditTitle] = useState(card.title);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -207,6 +208,14 @@ export function OSTCard({ card, isDragging }: OSTCardProps) {
                 </span>
                 Duplicate
               </DropdownMenuItem>
+              {card.children.length > 0 && (
+                <DropdownMenuItem onClick={() => copyCardWithChildren(card.id)}>
+                  <span className="mr-2 inline-flex h-4 w-4 items-center justify-center">
+                    <Copy className="h-3 w-3" />
+                  </span>
+                  Duplicate all
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive"
                 onClick={() => deleteCard(card.id)}

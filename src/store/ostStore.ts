@@ -34,6 +34,7 @@ interface OSTStore {
   deleteCard: (id: string) => void;
   moveCard: (cardId: string, newParentId: string | null) => void;
   copyCard: (cardId: string) => string | null;
+  copyCardWithChildren: (cardId: string) => string | null;
 
   // Selection
   selectCard: (id: string | null) => void;
@@ -305,6 +306,61 @@ export const useOSTStore = create<OSTStore>()(
         });
 
         return id;
+      },
+
+      copyCardWithChildren: (cardId) => {
+        const state = get();
+        const original = state.tree.cards[cardId];
+        if (!original) return null;
+
+        const cards = { ...state.tree.cards };
+
+        const cloneSubtree = (sourceId: string, parentId: string | null): string => {
+          const source = state.tree.cards[sourceId];
+          const id = nanoid();
+          const cloned: OSTCard = {
+            ...source,
+            id,
+            parentId,
+            children: [],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+
+          cards[id] = cloned;
+
+          const childIds = source.children.map((childId) => cloneSubtree(childId, id));
+          cloned.children = childIds;
+
+          return id;
+        };
+
+        const newRootId = cloneSubtree(original.id, original.parentId);
+        let rootIds = [...state.tree.rootIds];
+
+        if (original.parentId && cards[original.parentId]) {
+          const siblings = cards[original.parentId].children;
+          const insertIndex = Math.max(0, siblings.indexOf(original.id) + 1);
+          const nextChildren = [...siblings];
+          nextChildren.splice(insertIndex, 0, newRootId);
+          cards[original.parentId] = {
+            ...cards[original.parentId],
+            children: nextChildren,
+          };
+        } else {
+          const insertIndex = Math.max(0, rootIds.indexOf(original.id) + 1);
+          rootIds.splice(insertIndex, 0, newRootId);
+        }
+
+        const newTree = { ...state.tree, cards, rootIds };
+        const newMarkdown = serializeTreeToMarkdown(newTree, state.projectName);
+
+        set({
+          tree: newTree,
+          markdown: newMarkdown,
+        });
+
+        return newRootId;
       },
 
       selectCard: (id) => set({ selectedCardId: id }),
