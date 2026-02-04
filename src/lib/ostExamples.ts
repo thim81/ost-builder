@@ -101,17 +101,26 @@ Initial responses feel generic or miss intent
 #### [Solution] Intent-aware opening prompts @next
 Ask a targeted clarifying question based on detected intent
 
+##### [Experiment] Test intent-first questions
+Compare generic vs. intent-first opening prompts for resolution rate
+
+##### [Experiment] Validate top 5 intents
+Run a lightweight intent classifier on top issues and measure accuracy
+
 ### [Opportunity] Users don’t trust the bot’s answers
 Lack of citations and uncertainty messaging
 
 #### [Solution] Add sources and confidence cues @next
 Show cited links and explain uncertainty
+
+##### [Experiment] Cite top 3 sources
+Show 1–3 citations on high-volume intents and measure trust signals
 `,
   },
   {
     id: 'example-hustlebadger-onboarding',
     name: 'Increase user base',
-    description: 'One outcome with three opportunities and solution ideas.',
+    description: 'One outcome with three opportunities and solution ideas (Hustle Badger example).',
     markdown: `# Increase our user base
 
 ## [Outcome] Grow MAU from 80k to 120k by March 31st @next

@@ -7,10 +7,7 @@ export interface GuidanceContent {
   source?: string;
 }
 
-export const OST_GUIDANCE: Record<
-  GuidanceType,
-  Record<GuidanceField, GuidanceContent>
-> = {
+export const OST_GUIDANCE: Record<GuidanceType, Record<GuidanceField, GuidanceContent>> = {
   outcome: {
     title: {
       title: 'What measurable business or customer outcome are we trying to improve?',
@@ -25,7 +22,7 @@ export const OST_GUIDANCE: Record<
     status: {
       title: 'What is the current state of this outcome?',
       description: 'Use status to communicate progress or risk at a glance.',
-      source: 'HustleBadger',
+      source: 'Hustle Badger',
     },
     metrics: {
       title: 'How will we measure progress toward this outcome?',
@@ -43,12 +40,12 @@ export const OST_GUIDANCE: Record<
     description: {
       title: 'What evidence supports this opportunity?',
       description: 'Cite interviews, analytics, or observations that validate the need.',
-      source: 'HustleBadger',
+      source: 'Hustle Badger',
     },
     status: {
       title: 'What is the current state of this opportunity?',
       description: 'Use status to reflect confidence or urgency.',
-      source: 'HustleBadger',
+      source: 'Hustle Badger',
     },
     metrics: {
       title: 'How will we validate this opportunity?',
@@ -65,12 +62,12 @@ export const OST_GUIDANCE: Record<
     description: {
       title: 'What is the simplest version to test?',
       description: 'Keep it small enough to validate quickly.',
-      source: 'HustleBadger',
+      source: 'Hustle Badger',
     },
     status: {
       title: 'What is the current state of this solution?',
       description: 'Track whether it’s next, at risk, or done.',
-      source: 'HustleBadger',
+      source: 'Hustle Badger',
     },
     metrics: {
       title: 'What metrics will show this solution worked?',
@@ -87,12 +84,12 @@ export const OST_GUIDANCE: Record<
     description: {
       title: 'Why is this assumption risky?',
       description: 'Explain what would break or how value would be lost.',
-      source: 'HustleBadger',
+      source: 'Hustle Badger',
     },
     status: {
       title: 'What is the current state of this assumption?',
       description: 'Use status to track validation progress.',
-      source: 'HustleBadger',
+      source: 'Hustle Badger',
     },
     metrics: {
       title: 'What evidence would validate this assumption?',
@@ -103,19 +100,18 @@ export const OST_GUIDANCE: Record<
   experiment: {
     title: {
       title: 'How can we quickly test this assumption?',
-      description:
-        'Prefer cheap, fast experiments that generate learning over certainty.',
+      description: 'Prefer cheap, fast experiments that generate learning over certainty.',
       source: 'Teresa Torres',
     },
     description: {
       title: 'What will we measure to learn?',
       description: 'Define the signal or metric that will confirm or refute the idea.',
-      source: 'HustleBadger',
+      source: 'Hustle Badger',
     },
     status: {
       title: 'What is the current state of this experiment?',
       description: 'Use status to track whether it’s planned, running, or done.',
-      source: 'HustleBadger',
+      source: 'Hustle Badger',
     },
     metrics: {
       title: 'What metric decides the experiment?',

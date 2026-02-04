@@ -7,6 +7,7 @@ import { ExportAction } from './header/actions/ExportAction';
 import { LayoutToggleAction } from './header/actions/LayoutToggleAction';
 import { ShareAction } from './header/actions/ShareAction';
 import { SettingsAction } from './header/actions/SettingsAction';
+import { GitHubLinkAction } from './header/actions/GitHubLinkAction';
 
 export function Header() {
   return (
@@ -22,9 +23,10 @@ export function Header() {
         <MarkdownEditorAction />
         <CreateNewAction />
         <ResetAction />
-        <ExportAction />
         <LayoutToggleAction />
+        <ExportAction />
         <ShareAction />
+        <GitHubLinkAction />
         <SettingsAction />
       </div>
     </header>

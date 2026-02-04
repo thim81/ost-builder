@@ -37,6 +37,10 @@ export function SettingsAction() {
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
+          <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+            Settings affect how the tree is displayed on this device. They won’t change the
+            underlying data.
+          </div>
           <div className="space-y-2">
           <span className="text-sm font-medium text-foreground">Experiment layout</span>
           <Select
@@ -53,6 +57,9 @@ export function SettingsAction() {
               <SelectItem value="vertical">Vertical</SelectItem>
             </SelectContent>
           </Select>
+          <div className="text-xs text-muted-foreground">
+            Controls how experiments are arranged under solutions.
+          </div>
           </div>
           <div className="space-y-2">
             <span className="text-sm font-medium text-foreground">Tree Branch density</span>
@@ -68,6 +75,9 @@ export function SettingsAction() {
                 <SelectItem value="compact">Compact</SelectItem>
               </SelectContent>
             </Select>
+            <div className="text-xs text-muted-foreground">
+              Compact hides descriptions and progress to fit more cards on screen.
+            </div>
           </div>
         </div>
       </DialogContent>
