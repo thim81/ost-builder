@@ -78,10 +78,10 @@ export async function exportOSTToPng({
 
     const watermarkRect = watermarkEl.getBoundingClientRect();
     const extraPaddingRight = Math.ceil(
-      Math.max(watermarkMinPadding, watermarkRect.width + watermarkPadding * 2)
+      Math.max(watermarkMinPadding, watermarkRect.width + watermarkPadding * 2),
     );
     const extraPaddingBottom = Math.ceil(
-      Math.max(watermarkMinPadding, watermarkRect.height + watermarkPadding * 2)
+      Math.max(watermarkMinPadding, watermarkRect.height + watermarkPadding * 2),
     );
     source.style.paddingRight = `${extraPaddingRight}px`;
     source.style.paddingBottom = `${extraPaddingBottom}px`;
@@ -100,7 +100,7 @@ export async function exportOSTToPng({
         contentRect,
         currentZoom,
         currentOffsetX,
-        currentOffsetY
+        currentOffsetY,
       );
 
       content.style.transformOrigin = 'top left';

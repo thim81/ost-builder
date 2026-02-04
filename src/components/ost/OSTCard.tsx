@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { MoreHorizontal, Check, Clock, Target, AlertCircle } from 'lucide-react';
+import { MoreHorizontal, Check, Clock, Target, AlertCircle, Copy, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { OSTCard as OSTCardType, CardType, CardStatus } from '@/types/ost';
 import { useOSTStore } from '@/store/ostStore';
@@ -74,8 +74,15 @@ const statusConfig: Record<CardStatus, { label: string; icon: React.ReactNode; c
 };
 
 export function OSTCard({ card, isDragging }: OSTCardProps) {
-  const { selectedCardId, selectCard, editingCardId, setEditingCard, updateCard, deleteCard } =
-    useOSTStore();
+  const {
+    selectedCardId,
+    selectCard,
+    editingCardId,
+    setEditingCard,
+    updateCard,
+    deleteCard,
+    copyCard,
+  } = useOSTStore();
   const [editTitle, setEditTitle] = useState(card.title);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -194,10 +201,19 @@ export function OSTCard({ card, isDragging }: OSTCardProps) {
                 Set At Risk
               </DropdownMenuItem>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => copyCard(card.id)}>
+                <span className="mr-2 inline-flex h-4 w-4 items-center justify-center">
+                  <Copy className="h-3 w-3" />
+                </span>
+                Duplicate
+              </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive"
                 onClick={() => deleteCard(card.id)}
               >
+                <span className="mr-2 inline-flex h-4 w-4 items-center justify-center">
+                  <Trash2 className="h-3 w-3" />
+                </span>
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>

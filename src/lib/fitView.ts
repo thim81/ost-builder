@@ -10,7 +10,7 @@ export function computeFitView(
   currentZoom: number,
   currentOffsetX: number,
   currentOffsetY: number,
-  padding = 80
+  padding = 80,
 ): FitViewResult {
   const contentWidth = contentRect.width / currentZoom;
   const contentHeight = contentRect.height / currentZoom;
@@ -21,14 +21,12 @@ export function computeFitView(
   const fitZoom = Math.min(
     availableWidth / Math.max(1, contentWidth),
     availableHeight / Math.max(1, contentHeight),
-    2
+    2,
   );
   const nextZoom = Math.max(0.25, Math.min(2, fitZoom));
 
-  const contentCenterScreenX =
-    contentRect.left - containerRect.left + contentRect.width / 2;
-  const contentCenterScreenY =
-    contentRect.top - containerRect.top + contentRect.height / 2;
+  const contentCenterScreenX = contentRect.left - containerRect.left + contentRect.width / 2;
+  const contentCenterScreenY = contentRect.top - containerRect.top + contentRect.height / 2;
 
   const contentCenterLocalX = (contentCenterScreenX - currentOffsetX) / currentZoom;
   const contentCenterLocalY = (contentCenterScreenY - currentOffsetY) / currentZoom;

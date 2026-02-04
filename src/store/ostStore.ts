@@ -33,6 +33,7 @@ interface OSTStore {
   updateCard: (id: string, updates: Partial<OSTCard>) => void;
   deleteCard: (id: string) => void;
   moveCard: (cardId: string, newParentId: string | null) => void;
+  copyCard: (cardId: string) => string | null;
 
   // Selection
   selectCard: (id: string | null) => void;
@@ -262,6 +263,48 @@ export const useOSTStore = create<OSTStore>()(
             markdown: newMarkdown,
           };
         });
+      },
+
+      copyCard: (cardId) => {
+        const state = get();
+        const original = state.tree.cards[cardId];
+        if (!original) return null;
+
+        const id = nanoid();
+        const copied: OSTCard = {
+          ...original,
+          id,
+          children: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        const cards = { ...state.tree.cards, [id]: copied };
+        let rootIds = [...state.tree.rootIds];
+
+        if (original.parentId && cards[original.parentId]) {
+          const siblings = cards[original.parentId].children;
+          const insertIndex = Math.max(0, siblings.indexOf(original.id) + 1);
+          const nextChildren = [...siblings];
+          nextChildren.splice(insertIndex, 0, id);
+          cards[original.parentId] = {
+            ...cards[original.parentId],
+            children: nextChildren,
+          };
+        } else {
+          const insertIndex = Math.max(0, rootIds.indexOf(original.id) + 1);
+          rootIds.splice(insertIndex, 0, id);
+        }
+
+        const newTree = { ...state.tree, cards, rootIds };
+        const newMarkdown = serializeTreeToMarkdown(newTree);
+
+        set({
+          tree: newTree,
+          markdown: newMarkdown,
+        });
+
+        return id;
       },
 
       selectCard: (id) => set({ selectedCardId: id }),
