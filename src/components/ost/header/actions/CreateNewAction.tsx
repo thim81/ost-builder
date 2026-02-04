@@ -131,7 +131,7 @@ Add a small experimentable solution
                 target="_blank"
                 rel="noreferrer"
               >
-                HustleBadger
+                Hustle Badger
               </a>
               .
             </div>
