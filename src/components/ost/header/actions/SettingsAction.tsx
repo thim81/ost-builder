@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/select';
 
 export function SettingsAction() {
-  const { experimentLayout, setExperimentLayout } = useOSTStore();
+  const { experimentLayout, setExperimentLayout, viewDensity, setViewDensity } = useOSTStore();
   const [open, setOpen] = useState(false);
 
   return (
@@ -36,7 +36,8 @@ export function SettingsAction() {
             Tune the layout and behavior of your OST view.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-2">
+        <div className="space-y-4">
+          <div className="space-y-2">
           <span className="text-sm font-medium text-foreground">Experiment layout</span>
           <Select
             value={experimentLayout}
@@ -52,6 +53,22 @@ export function SettingsAction() {
               <SelectItem value="vertical">Vertical</SelectItem>
             </SelectContent>
           </Select>
+          </div>
+          <div className="space-y-2">
+            <span className="text-sm font-medium text-foreground">Tree Branch density</span>
+            <Select
+              value={viewDensity}
+              onValueChange={(value) => setViewDensity(value as 'full' | 'compact')}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select density" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="full">Full</SelectItem>
+                <SelectItem value="compact">Compact</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
