@@ -70,6 +70,9 @@ Describe the measurable outcome
 
 ### [Opportunity] A key customer problem
 Add the opportunity statement
+
+#### [Solution] A simple first solution @next
+Add a small experimentable solution
 `;
                   createNewTree(minimal, 'My Opportunity Solution Tree');
                   setCreateOpen(false);

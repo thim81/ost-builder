@@ -108,4 +108,70 @@ Lack of citations and uncertainty messaging
 Show cited links and explain uncertainty
 `,
   },
+  {
+    id: 'example-hustlebadger-onboarding',
+    name: 'Increase user base (Hustlebadger)',
+    description: 'One outcome with three opportunities and solution ideas.',
+    markdown: `# Increase our user base
+
+## [Outcome] Grow MAU from 80k to 120k by March 31st @next
+Mission: Increase our user base
+- start: 80
+- current: 80
+- target: 120
+
+### [Opportunity] Improve onboarding
+Reduce friction and improve completion of the onboarding flow
+
+#### [Solution] Add questions to increase motivation
+
+##### [Experiment] We can create compelling copy
+Test variants of motivational copy in onboarding
+
+##### [Experiment] Users actually read screens
+Track scroll depth and completion by screen
+
+##### [Experiment] More screens does not increase drop off
+A/B test shorter vs. longer onboarding
+
+#### [Solution] Social sign on
+Reduce account creation friction
+
+#### [Solution] Better error messages
+Reduce drop off at password creation
+
+##### [Experiment] Drop out rate at password creation is big
+Instrument and measure the failure points
+
+##### [Experiment] Better error messages reduce drop off
+A/B test new error messaging
+
+##### [Experiment] Password creation tips do not increase fraud
+Monitor fraud rate vs. helpful tips
+
+### [Opportunity] Increase SEO
+Improve organic acquisition
+
+#### [Solution] Create blog
+Publish high-intent content
+
+#### [Solution] Auto-generate categories
+Scale content taxonomy and internal links
+
+#### [Solution] Page speed optimizations
+Improve Core Web Vitals
+
+### [Opportunity] Improve CRM
+Increase engagement and conversion
+
+#### [Solution] Homepage messaging
+Clarify value proposition
+
+#### [Solution] Newsletter pop up
+Capture more emails
+
+#### [Solution] Engagement campaign
+Re-activate dormant users
+`,
+  },
 ];
