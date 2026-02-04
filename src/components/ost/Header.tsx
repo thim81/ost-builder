@@ -96,6 +96,7 @@ export function Header() {
         currentZoom: canvasState.zoom,
         currentOffsetX: canvasState.offset.x,
         currentOffsetY: canvasState.offset.y,
+        watermarkText: tree.name ? `OST Builder — ${tree.name}` : 'OST Builder',
       });
       toast({
         title: 'Export started',
