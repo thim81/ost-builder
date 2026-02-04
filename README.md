@@ -6,7 +6,7 @@ A fast, markdown-first Opportunity Solution Tree (OST) builder for product teams
 
 Live demo: [https://ost-builder.pages.dev](https://ost-builder.pages.dev)
 
-![OST Builder](https://ost-builder.pages.dev/ost-screenshot.png)
+![OST Builder](https://ost-builder.pages.dev/screenshots/ost-builder-showcase.png)
 
 
 ## Features
