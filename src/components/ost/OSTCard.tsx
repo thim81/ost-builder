@@ -186,6 +186,7 @@ export function OSTCard({ card, isDragging }: OSTCardProps) {
               <DropdownMenuItem onClick={() => setEditingCard(card.id)}>
                 Edit title
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => updateCard(card.id, { status: 'on-track' })}
               >
