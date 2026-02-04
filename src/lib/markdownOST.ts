@@ -233,8 +233,12 @@ export function parseMarkdownToTree(markdown: string): OSTTree {
   return tree;
 }
 
-export function serializeTreeToMarkdown(tree: OSTTree): string {
+export function serializeTreeToMarkdown(tree: OSTTree, name?: string): string {
   const lines: string[] = [];
+  if (name) {
+    lines.push(`# ${name}`);
+    lines.push('');
+  }
 
   const serializeCard = (cardId: string) => {
     const card = tree.cards[cardId];

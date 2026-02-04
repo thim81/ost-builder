@@ -130,7 +130,7 @@ export const useOSTStore = create<OSTStore>()(
           const rootIds = parentId ? state.tree.rootIds : [...state.tree.rootIds, id];
 
           const newTree = { ...state.tree, cards, rootIds };
-          const newMarkdown = serializeTreeToMarkdown(newTree);
+          const newMarkdown = serializeTreeToMarkdown(newTree, state.projectName);
 
           return {
             tree: newTree,
@@ -155,7 +155,7 @@ export const useOSTStore = create<OSTStore>()(
               },
             },
           };
-          const newMarkdown = serializeTreeToMarkdown(newTree);
+          const newMarkdown = serializeTreeToMarkdown(newTree, state.projectName);
 
           return {
             tree: newTree,
@@ -194,7 +194,7 @@ export const useOSTStore = create<OSTStore>()(
           const rootIds = state.tree.rootIds.filter((rid) => !toDelete.has(rid));
 
           const newTree = { ...state.tree, cards, rootIds };
-          const newMarkdown = serializeTreeToMarkdown(newTree);
+          const newMarkdown = serializeTreeToMarkdown(newTree, state.projectName);
 
           return {
             tree: newTree,
@@ -256,7 +256,7 @@ export const useOSTStore = create<OSTStore>()(
           }
 
           const newTree = { ...state.tree, cards, rootIds };
-          const newMarkdown = serializeTreeToMarkdown(newTree);
+          const newMarkdown = serializeTreeToMarkdown(newTree, state.projectName);
 
           return {
             tree: newTree,
@@ -297,7 +297,7 @@ export const useOSTStore = create<OSTStore>()(
         }
 
         const newTree = { ...state.tree, cards, rootIds };
-        const newMarkdown = serializeTreeToMarkdown(newTree);
+        const newMarkdown = serializeTreeToMarkdown(newTree, state.projectName);
 
         set({
           tree: newTree,
