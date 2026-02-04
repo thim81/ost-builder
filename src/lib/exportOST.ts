@@ -113,13 +113,7 @@ export async function exportOSTToPng({
 
       const secondSourceRect = source.getBoundingClientRect();
       const secondContentRect = bounds.getBoundingClientRect();
-      const second = computeFitView(
-        secondSourceRect,
-        secondContentRect,
-        zoom,
-        offsetX,
-        offsetY,
-      );
+      const second = computeFitView(secondSourceRect, secondContentRect, zoom, offsetX, offsetY);
       content.style.transform = `translate(${second.offsetX}px, ${second.offsetY}px) scale(${second.zoom})`;
     }
 

@@ -3,6 +3,7 @@ import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { MoreHorizontal, Check, Clock, Target, AlertCircle, Copy, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { renderMarkdownLinks } from '@/lib/markdownLinks';
 import type { OSTCard as OSTCardType, CardType, CardStatus } from '@/types/ost';
 import { useOSTStore } from '@/store/ostStore';
 import { useState, useRef, useEffect } from 'react';
@@ -256,13 +257,13 @@ export function OSTCard({ card, isDragging }: OSTCardProps) {
             className="text-sm font-medium text-card-foreground leading-relaxed"
             onDoubleClick={() => setEditingCard(card.id)}
           >
-            {card.title}
+            {renderMarkdownLinks(card.title)}
           </p>
         )}
 
         {viewDensity === 'full' && card.description && !isEditing && (
           <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
-            {card.description}
+            {renderMarkdownLinks(card.description)}
           </p>
         )}
 

@@ -7,10 +7,7 @@ export interface GuidanceContent {
   source?: string;
 }
 
-export const OST_GUIDANCE: Record<
-  GuidanceType,
-  Record<GuidanceField, GuidanceContent>
-> = {
+export const OST_GUIDANCE: Record<GuidanceType, Record<GuidanceField, GuidanceContent>> = {
   outcome: {
     title: {
       title: 'What measurable business or customer outcome are we trying to improve?',
@@ -103,8 +100,7 @@ export const OST_GUIDANCE: Record<
   experiment: {
     title: {
       title: 'How can we quickly test this assumption?',
-      description:
-        'Prefer cheap, fast experiments that generate learning over certainty.',
+      description: 'Prefer cheap, fast experiments that generate learning over certainty.',
       source: 'Teresa Torres',
     },
     description: {
