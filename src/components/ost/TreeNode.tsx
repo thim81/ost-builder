@@ -51,14 +51,19 @@ export function TreeNode({ cardId, depth = 0 }: TreeNodeProps) {
   const firstChildRef = useRef<HTMLDivElement>(null);
   const lastChildRef = useRef<HTMLDivElement>(null);
   const [lineStyle, setLineStyle] = useState<CSSProperties>({});
+  const verticalListRef = useRef<HTMLDivElement>(null);
+  const firstVerticalRef = useRef<HTMLDivElement>(null);
+  const lastVerticalRef = useRef<HTMLDivElement>(null);
+  const [verticalLineStyle, setVerticalLineStyle] = useState<CSSProperties>({});
 
   useLayoutEffect(() => {
     if (children.length < 2) {
       setLineStyle({});
+      setVerticalLineStyle({});
       return;
     }
 
-    const measure = () => {
+    const measureHorizontal = () => {
       if (!lineContainerRef.current || !firstChildRef.current || !lastChildRef.current) return;
       const rowRect = lineContainerRef.current.getBoundingClientRect();
       const firstRect = firstChildRef.current.getBoundingClientRect();
@@ -66,19 +71,42 @@ export function TreeNode({ cardId, depth = 0 }: TreeNodeProps) {
       const left = firstRect.left - rowRect.left + firstRect.width / 2;
       const right = lastRect.left - rowRect.left + lastRect.width / 2;
       const width = Math.max(0, right - left);
-      const padding =5;
+      const padding = 5;
       setLineStyle({
         left: Math.max(0, left - padding),
         width: width + padding * 2,
       });
     };
 
-    measure();
+    const measureVertical = () => {
+      if (!verticalListRef.current || !firstVerticalRef.current || !lastVerticalRef.current) {
+        return;
+      }
+      const listRect = verticalListRef.current.getBoundingClientRect();
+      const firstRect = firstVerticalRef.current.getBoundingClientRect();
+      const lastRect = lastVerticalRef.current.getBoundingClientRect();
+      const top = firstRect.top - listRect.top + firstRect.height / 2;
+      const bottom = lastRect.top - listRect.top + lastRect.height / 2;
+      const height = Math.max(0, bottom - top);
+      setVerticalLineStyle({
+        top,
+        height,
+      });
+    };
 
-    const observer = new ResizeObserver(() => measure());
+    measureHorizontal();
+    measureVertical();
+
+    const observer = new ResizeObserver(() => {
+      measureHorizontal();
+      measureVertical();
+    });
     if (lineContainerRef.current) observer.observe(lineContainerRef.current);
     if (firstChildRef.current) observer.observe(firstChildRef.current);
     if (lastChildRef.current) observer.observe(lastChildRef.current);
+    if (verticalListRef.current) observer.observe(verticalListRef.current);
+    if (firstVerticalRef.current) observer.observe(firstVerticalRef.current);
+    if (lastVerticalRef.current) observer.observe(lastVerticalRef.current);
 
     return () => observer.disconnect();
   }, [children.length, layoutDirection, experimentLayout]);
@@ -193,13 +221,51 @@ export function TreeNode({ cardId, depth = 0 }: TreeNodeProps) {
                         </div>
                       </div>
                     </>
-                  ) : (
-                    <div className="relative flex flex-col gap-8 pl-4">
+                  ) : useVerticalExperiments ? (
+                    <div ref={verticalListRef} className="relative flex flex-col gap-6 pl-4">
                       {children.length > 1 && (
-                        <div className="absolute left-0 top-2 bottom-2 w-0.5 bg-connector" />
+                        <div
+                          className="absolute left-0 w-0.5 bg-connector"
+                          style={verticalLineStyle}
+                        />
                       )}
-                      {children.map((child) => (
-                        <div key={child.id} className="flex items-center">
+                      {children.map((child, index) => (
+                        <div
+                          key={child.id}
+                          ref={
+                            index === 0
+                              ? firstVerticalRef
+                              : index === children.length - 1
+                                ? lastVerticalRef
+                                : undefined
+                          }
+                          className="flex items-center"
+                        >
+                          <div className="h-0.5 w-4 bg-connector -ml-4" />
+                          <TreeNode cardId={child.id} depth={depth + 1} />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div ref={verticalListRef} className="relative flex flex-col gap-8 pl-4">
+                      {children.length > 1 && (
+                        <div
+                          className="absolute left-0 w-0.5 bg-connector"
+                          style={verticalLineStyle}
+                        />
+                      )}
+                      {children.map((child, index) => (
+                        <div
+                          key={child.id}
+                          ref={
+                            index === 0
+                              ? firstVerticalRef
+                              : index === children.length - 1
+                                ? lastVerticalRef
+                                : undefined
+                          }
+                          className="flex items-center"
+                        >
                           <div className="h-0.5 w-4 bg-connector -ml-4" />
                           <TreeNode cardId={child.id} depth={depth + 1} />
                         </div>
