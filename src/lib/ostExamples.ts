@@ -111,7 +111,7 @@ Show cited links and explain uncertainty
   {
     id: 'example-hustlebadger-onboarding',
     name: 'Increase user base',
-    description: 'One outcome with three opportunities and solution ideas.',
+    description: 'One outcome with three opportunities and solution ideas (Hustle Badger example).',
     markdown: `# Increase our user base
 
 ## [Outcome] Grow MAU from 80k to 120k by March 31st @next
