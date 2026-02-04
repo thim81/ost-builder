@@ -45,6 +45,7 @@ export function TreeNode({ cardId, depth = 0 }: TreeNodeProps) {
   const childType = childTypeMap[card.type];
   const isExperimentParent = card.type === 'solution';
   const useHorizontalExperiments = isExperimentParent && experimentLayout === 'horizontal';
+  const useVerticalExperiments = isExperimentParent && experimentLayout === 'vertical';
 
   const lineContainerRef = useRef<HTMLDivElement>(null);
   const firstChildRef = useRef<HTMLDivElement>(null);
@@ -225,52 +226,107 @@ export function TreeNode({ cardId, depth = 0 }: TreeNodeProps) {
                 )}
 
                 {/* Children container */}
-                {children.length > 0 && (
-                  <>
-                    {/* Horizontal connector for multiple children */}
-                    <div className="relative flex justify-center">
-                      <div className="relative inline-flex flex-col items-center px-4">
-                        {children.length > 1 && (
-                          <div
-                            className="absolute top-0 h-0.5 bg-connector"
-                            style={{
-                              ...lineStyle,
-                              left:
-                                typeof lineStyle.left === 'number'
-                                  ? lineStyle.left + 22
-                                  : lineStyle.left,
-                              width:
-                                typeof lineStyle.width === 'number'
-                                  ? lineStyle.width - 10
-                                  : lineStyle.width,
-                            }}
-                          />
-                        )}
-                        <div ref={lineContainerRef} className="flex flex-nowrap gap-8 pt-4">
-                          {children.map((child, index) => (
+                {children.length > 0 &&
+                  (useHorizontalExperiments ? (
+                    <>
+                      <div className="relative flex justify-center">
+                        <div className="relative inline-flex flex-col items-center px-4">
+                          {children.length > 1 && (
                             <div
-                              key={child.id}
-                              ref={
-                                index === 0
-                                  ? firstChildRef
-                                  : index === children.length - 1
-                                    ? lastChildRef
-                                    : undefined
-                              }
-                              className="flex flex-col items-center"
-                            >
-                              {/* Vertical connector from horizontal line */}
-                              {children.length > 1 && (
-                                <div className="w-0.5 h-4 bg-connector -mt-4" />
-                              )}
-                              <TreeNode cardId={child.id} depth={depth + 1} />
-                            </div>
-                          ))}
+                              className="absolute top-0 h-0.5 bg-connector"
+                              style={{
+                                ...lineStyle,
+                                left:
+                                  typeof lineStyle.left === 'number'
+                                    ? lineStyle.left + 22
+                                    : lineStyle.left,
+                                width:
+                                  typeof lineStyle.width === 'number'
+                                    ? lineStyle.width - 10
+                                    : lineStyle.width,
+                              }}
+                            />
+                          )}
+                          <div ref={lineContainerRef} className="flex flex-nowrap gap-8 pt-4">
+                            {children.map((child, index) => (
+                              <div
+                                key={child.id}
+                                ref={
+                                  index === 0
+                                    ? firstChildRef
+                                    : index === children.length - 1
+                                      ? lastChildRef
+                                      : undefined
+                                }
+                                className="flex flex-col items-center"
+                              >
+                                {children.length > 1 && (
+                                  <div className="w-0.5 h-4 bg-connector -mt-4" />
+                                )}
+                                <TreeNode cardId={child.id} depth={depth + 1} />
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
+                    </>
+                  ) : useVerticalExperiments ? (
+                    <div className="relative flex flex-col items-center gap-6 pt-4">
+                      {children.length > 1 && (
+                        <div className="absolute top-4 bottom-4 w-0.5 bg-connector" />
+                      )}
+                      {children.map((child) => (
+                        <div key={child.id} className="flex flex-col items-center">
+                          <TreeNode cardId={child.id} depth={depth + 1} />
+                        </div>
+                      ))}
                     </div>
-                  </>
-                )}
+                  ) : (
+                    <>
+                      {/* Horizontal connector for multiple children */}
+                      <div className="relative flex justify-center">
+                        <div className="relative inline-flex flex-col items-center px-4">
+                          {children.length > 1 && (
+                            <div
+                              className="absolute top-0 h-0.5 bg-connector"
+                              style={{
+                                ...lineStyle,
+                                left:
+                                  typeof lineStyle.left === 'number'
+                                    ? lineStyle.left + 22
+                                    : lineStyle.left,
+                                width:
+                                  typeof lineStyle.width === 'number'
+                                    ? lineStyle.width - 10
+                                    : lineStyle.width,
+                              }}
+                            />
+                          )}
+                          <div ref={lineContainerRef} className="flex flex-nowrap gap-8 pt-4">
+                            {children.map((child, index) => (
+                              <div
+                                key={child.id}
+                                ref={
+                                  index === 0
+                                    ? firstChildRef
+                                    : index === children.length - 1
+                                      ? lastChildRef
+                                      : undefined
+                                }
+                                className="flex flex-col items-center"
+                              >
+                                {/* Vertical connector from horizontal line */}
+                                {children.length > 1 && (
+                                  <div className="w-0.5 h-4 bg-connector -mt-4" />
+                                )}
+                                <TreeNode cardId={child.id} depth={depth + 1} />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  ))}
               </>
             )}
           </motion.div>
