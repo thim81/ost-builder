@@ -1,11 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { createMcpHandler } from "agents/mcp";
+import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { nanoid } from "nanoid";
 import { z } from "zod";
-
-type Env = {
-  ALLOWED_ORIGINS?: string;
-};
 
 type ResponseFormat = "markdown" | "json";
 
@@ -602,31 +598,38 @@ server.registerTool(
   }
 );
 
-const handler = createMcpHandler(server, {
-  route: "/api/mcp",
-  transportType: "streamable-http"
-});
+const transport = new WebStandardStreamableHTTPServerTransport();
+let connected: Promise<void> | null = null;
+const ensureConnected = () => (connected ??= server.connect(transport));
 
-const isOriginAllowed = (request: Request, env: Env): boolean => {
-  const allowList = (env.ALLOWED_ORIGINS ?? "")
-    .split(",")
-    .map((value) => value.trim())
-    .filter(Boolean);
-
-  if (!allowList.length) return true;
-
-  const origin = request.headers.get("Origin");
-  if (!origin) return true;
-  return allowList.includes(origin);
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET,POST,DELETE,OPTIONS",
+  "Access-Control-Allow-Headers":
+    "Content-Type,mcp-session-id,Last-Event-ID,mcp-protocol-version",
+  "Access-Control-Expose-Headers": "mcp-session-id,mcp-protocol-version"
 };
 
-export const onRequest = (context: {
-  request: Request;
-  env: Env;
-  ctx: { waitUntil?: (promise: Promise<unknown>) => void };
-}) => {
-  if (!isOriginAllowed(context.request, context.env)) {
-    return new Response("Origin not allowed.", { status: 403 });
+const withCors = (response: Response): Response => {
+  const headers = new Headers(response.headers);
+  Object.entries(corsHeaders).forEach(([key, value]) => {
+    headers.set(key, value);
+  });
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers
+  });
+};
+
+export const onRequest = async (context: { request: Request }) => {
+  const { request } = context;
+
+  if (request.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: corsHeaders });
   }
-  return handler(context.request, context.env, context.ctx);
+
+  await ensureConnected();
+  const response = await transport.handleRequest(request);
+  return withCors(response);
 };
