@@ -3,6 +3,10 @@ import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/
 import { nanoid } from "nanoid";
 import { z } from "zod";
 
+type Env = {
+  SHARE_BASE_URL?: string;
+};
+
 type ResponseFormat = "markdown" | "json";
 
 type Outcome = {
@@ -417,6 +421,9 @@ const validateTree = (tree: OstTree): { isValid: boolean; issues: string[] } => 
   return { isValid: issues.length === 0, issues };
 };
 
+const DEFAULT_SHARE_BASE_URL = "https://ost-builder.pages.dev/";
+let shareBaseUrl = DEFAULT_SHARE_BASE_URL;
+
 const encodeMarkdownToUrlFragment = (markdown: string, name?: string): string => {
   const payload = JSON.stringify({ v: 1, m: markdown, n: name || "" });
   return encodeStringToUrlFragment(payload);
@@ -673,7 +680,9 @@ server.registerTool(
   },
   async ({ markdown, project_name, base_url, response_format }) => {
     const fragment = encodeMarkdownToUrlFragment(markdown, project_name);
-    const shareUrl = base_url ? `${base_url}#${fragment}` : `#${fragment}`;
+    const shareUrl = base_url
+      ? `${base_url}#${fragment}`
+      : `${shareBaseUrl}#${fragment}`;
 
     const payload = {
       share_data: { v: 1, m: markdown, n: project_name || "" },
@@ -720,8 +729,12 @@ const withCors = (response: Response): Response => {
   });
 };
 
-export const onRequest = async (context: { request: Request }) => {
-  const { request } = context;
+export const onRequest = async (context: { request: Request; env?: Env }) => {
+  const { request, env } = context;
+
+  if (env?.SHARE_BASE_URL) {
+    shareBaseUrl = env.SHARE_BASE_URL;
+  }
 
   if (request.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders });
