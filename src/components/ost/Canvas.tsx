@@ -231,6 +231,17 @@ export function Canvas() {
             data-ost-export-bounds
             className="flex flex-col items-center gap-6"
           >
+            {/* Add new root outcome button */}
+            {tree.rootIds.length > 0 && (
+              <div className="mt-2">
+                <AddCardButton
+                  type="outcome"
+                  onClick={() => addCard('outcome', null)}
+                  size="md"
+                />
+              </div>
+            )}
+
             {/* Root nodes */}
             {tree.rootIds.length === 0 ? (
               <div className="flex flex-col items-center gap-4 mt-32">
@@ -249,16 +260,6 @@ export function Canvas() {
                 </div>
             )}
 
-            {/* Add new root outcome button */}
-            {tree.rootIds.length > 0 && (
-              <div className="mt-8">
-                <AddCardButton
-                  type="outcome"
-                  onClick={() => addCard('outcome', null)}
-                  size="md"
-                />
-              </div>
-            )}
           </div>
         </motion.div>
 
