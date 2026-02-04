@@ -230,6 +230,28 @@ const ValidateTreeInputSchema = z
   })
   .strict();
 
+const ShareLinkInputSchema = z
+  .object({
+    markdown: z
+      .string()
+      .min(1, "Markdown must not be empty")
+      .describe("Markdown to embed in the share link"),
+    project_name: z
+      .string()
+      .max(200, "Project name must be 200 characters or fewer")
+      .optional()
+      .describe("Optional project name to embed with the share data"),
+    base_url: z
+      .string()
+      .url()
+      .optional()
+      .describe("Optional base URL to prefix the share fragment"),
+    response_format: ResponseFormatSchema.default("markdown").describe(
+      "Output format: markdown or json (default: markdown)"
+    )
+  })
+  .strict();
+
 const CreateTreeOutputSchema = z.object({
   tree: OstTreeSchema,
   markdown: z.string().optional(),
@@ -241,6 +263,16 @@ const ValidateTreeOutputSchema = z.object({
   issues: z.array(z.string()),
   summary: z.string(),
   markdown: z.string().optional()
+});
+
+const ShareLinkOutputSchema = z.object({
+  share_data: z.object({
+    v: z.number(),
+    m: z.string(),
+    n: z.string()
+  }),
+  share_fragment: z.string(),
+  share_url: z.string()
 });
 
 const server = new McpServer({
@@ -385,12 +417,36 @@ const validateTree = (tree: OstTree): { isValid: boolean; issues: string[] } => 
   return { isValid: issues.length === 0, issues };
 };
 
+const encodeMarkdownToUrlFragment = (markdown: string, name?: string): string => {
+  const payload = JSON.stringify({ v: 1, m: markdown, n: name || "" });
+  return encodeStringToUrlFragment(payload);
+};
+
+const encodeStringToUrlFragment = (value: string): string => {
+  const bytes = new TextEncoder().encode(value);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 1) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+
+  let base64: string;
+  if (typeof btoa === "function") {
+    base64 = btoa(binary);
+  } else if (typeof Buffer !== "undefined") {
+    base64 = Buffer.from(binary, "binary").toString("base64");
+  } else {
+    throw new Error("Base64 encoder is not available in this environment.");
+  }
+
+  return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+};
+
 server.registerTool(
   "ost_create_tree",
   {
     title: "Create Opportunity Solution Tree",
     description:
-      "Create a new Opportunity Solution Tree (OST) with a desired outcome and optional starter opportunities.",
+      "Create a new Opportunity Solution Tree (OST) with a desired outcome and optional starter opportunities. Suggestion: call ost_render_markdown to show the OST once it is built.",
     inputSchema: CreateTreeInputSchema,
     outputSchema: CreateTreeOutputSchema,
     annotations: {
@@ -437,7 +493,8 @@ server.registerTool(
   "ost_add_opportunity",
   {
     title: "Add Opportunity",
-    description: "Add a new opportunity to an existing Opportunity Solution Tree.",
+    description:
+      "Add a new opportunity to an existing Opportunity Solution Tree. Suggestion: call ost_render_markdown to show the updated OST.",
     inputSchema: AddOpportunityInputSchema,
     outputSchema: CreateTreeOutputSchema,
     annotations: {
@@ -482,7 +539,8 @@ server.registerTool(
   "ost_add_solution",
   {
     title: "Add Solution",
-    description: "Add a solution under a specific opportunity in an OST.",
+    description:
+      "Add a solution under a specific opportunity in an OST. Suggestion: call ost_render_markdown to show the updated OST.",
     inputSchema: AddSolutionInputSchema,
     outputSchema: CreateTreeOutputSchema,
     annotations: {
@@ -595,6 +653,46 @@ server.registerTool(
     };
 
     return formatToolResponse(response_format, payload, markdown);
+  }
+);
+
+server.registerTool(
+  "ost_share_link",
+  {
+    title: "Create OST Share Link",
+    description:
+      "Create a shareable OST link fragment (base64url-encoded) from markdown content.",
+    inputSchema: ShareLinkInputSchema,
+    outputSchema: ShareLinkOutputSchema,
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false
+    }
+  },
+  async ({ markdown, project_name, base_url, response_format }) => {
+    const fragment = encodeMarkdownToUrlFragment(markdown, project_name);
+    const shareUrl = base_url ? `${base_url}#${fragment}` : `#${fragment}`;
+
+    const payload = {
+      share_data: { v: 1, m: markdown, n: project_name || "" },
+      share_fragment: fragment,
+      share_url: shareUrl
+    };
+
+    const markdownOutput = [
+      formatHeading(2, "OST Share Link"),
+      "",
+      `Share URL: ${shareUrl}`,
+      "",
+      "Share fragment:",
+      "```",
+      fragment,
+      "```"
+    ].join("\n");
+
+    return formatToolResponse(response_format, payload, markdownOutput);
   }
 );
 
