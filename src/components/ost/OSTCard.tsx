@@ -83,6 +83,7 @@ export function OSTCard({ card, isDragging }: OSTCardProps) {
     deleteCard,
     copyCard,
     copyCardWithChildren,
+    viewDensity,
   } = useOSTStore();
   const [editTitle, setEditTitle] = useState(card.title);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -259,14 +260,14 @@ export function OSTCard({ card, isDragging }: OSTCardProps) {
           </p>
         )}
 
-        {card.description && !isEditing && (
+        {viewDensity === 'full' && card.description && !isEditing && (
           <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
             {card.description}
           </p>
         )}
 
         {/* Metrics for outcome cards */}
-        {card.type === 'outcome' && card.metrics && (
+        {viewDensity === 'full' && card.type === 'outcome' && card.metrics && (
           <div className="mt-3 space-y-2">
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">

@@ -25,6 +25,8 @@ interface OSTStore {
   projectName: string;
   canvasState: CanvasState;
   layoutDirection: LayoutDirection;
+  experimentLayout: 'horizontal' | 'vertical';
+  viewDensity: 'full' | 'compact';
   selectedCardId: string | null;
   editingCardId: string | null;
 
@@ -45,6 +47,8 @@ interface OSTStore {
   setOffset: (x: number, y: number) => void;
   setLayoutDirection: (direction: LayoutDirection) => void;
   toggleLayoutDirection: () => void;
+  setExperimentLayout: (layout: 'horizontal' | 'vertical') => void;
+  setViewDensity: (density: 'full' | 'compact') => void;
 
   // Tree management
   resetTree: () => void;
@@ -95,6 +99,8 @@ export const useOSTStore = create<OSTStore>()(
         offset: { x: 0, y: 0 },
       },
       layoutDirection: 'vertical',
+      experimentLayout: 'vertical',
+      viewDensity: 'full',
       selectedCardId: null,
       editingCardId: null,
 
@@ -382,6 +388,8 @@ export const useOSTStore = create<OSTStore>()(
         set((state) => ({
           layoutDirection: state.layoutDirection === 'vertical' ? 'horizontal' : 'vertical',
         })),
+      setExperimentLayout: (layout) => set({ experimentLayout: layout }),
+      setViewDensity: (density) => set({ viewDensity: density }),
 
       setProjectName: (name) =>
         set((state) => {
@@ -479,6 +487,8 @@ export const useOSTStore = create<OSTStore>()(
         markdown: state.markdown,
         projectName: state.projectName,
         layoutDirection: state.layoutDirection,
+        experimentLayout: state.experimentLayout,
+        viewDensity: state.viewDensity,
       }),
       onRehydrateStorage: () => (state) => {
         // Re-parse tree from markdown on rehydration
