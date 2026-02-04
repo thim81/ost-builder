@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   TreeDeciduous,
   Settings,
@@ -9,10 +9,12 @@ import {
   Check,
   ArrowRightLeft,
   Download,
+  PenLine,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useOSTStore } from '@/store/ostStore';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
 import {
   AlertDialog,
@@ -45,7 +47,6 @@ import { exportOSTToPng } from '@/lib/exportOST';
 
 export function Header() {
   const {
-    tree,
     resetTree,
     getMarkdown,
     setMarkdown,
@@ -53,6 +54,8 @@ export function Header() {
     layoutDirection,
     toggleLayoutDirection,
     canvasState,
+    projectName,
+    setProjectName,
   } = useOSTStore();
   const [markdownEditorOpen, setMarkdownEditorOpen] = useState(false);
   const [editedMarkdown, setEditedMarkdown] = useState('');
@@ -61,6 +64,10 @@ export function Header() {
   const [exportBackground, setExportBackground] = useState<'grid' | 'transparent'>('grid');
   const [exportMode, setExportMode] = useState<'current' | 'fit'>('fit');
   const [isExporting, setIsExporting] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState(projectName);
+  const markdownRef = useRef<HTMLTextAreaElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   const handleOpenMarkdownEditor = () => {
     setEditedMarkdown(getMarkdown());
@@ -87,6 +94,65 @@ export function Header() {
     });
   };
 
+  const applyMarkdown = (formatter: (text: string) => string, cursorOffset = 0) => {
+    const textarea = markdownRef.current;
+    if (!textarea) return;
+    const start = textarea.selectionStart ?? 0;
+    const end = textarea.selectionEnd ?? 0;
+    const before = editedMarkdown.slice(0, start);
+    const selected = editedMarkdown.slice(start, end);
+    const after = editedMarkdown.slice(end);
+    const next = `${before}${formatter(selected)}${after}`;
+    setEditedMarkdown(next);
+    requestAnimationFrame(() => {
+      const cursor = start + cursorOffset + formatter(selected).length;
+      textarea.focus();
+      textarea.setSelectionRange(cursor, cursor);
+    });
+  };
+
+  const wrapSelection = (prefix: string, suffix = prefix) => {
+    applyMarkdown((text) => `${prefix}${text || 'text'}${suffix}`, prefix.length);
+  };
+
+  const insertLinePrefix = (prefix: string) => {
+    applyMarkdown((text) => {
+      if (text) {
+        return text
+          .split('\n')
+          .map((line) => (line.trim().length ? `${prefix}${line}` : line))
+          .join('\n');
+      }
+      return `${prefix}`;
+    });
+  };
+
+  const handleStartNameEdit = () => {
+    setNameDraft(projectName);
+    setIsEditingName(true);
+    requestAnimationFrame(() => {
+      nameInputRef.current?.focus();
+      nameInputRef.current?.select();
+    });
+  };
+
+  const handleSaveName = () => {
+    setProjectName(nameDraft);
+    setIsEditingName(false);
+  };
+
+  const handleNameKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      handleSaveName();
+    }
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      setIsEditingName(false);
+      setNameDraft(projectName);
+    }
+  };
+
   const handleExport = async () => {
     setIsExporting(true);
     try {
@@ -96,7 +162,7 @@ export function Header() {
         currentZoom: canvasState.zoom,
         currentOffsetX: canvasState.offset.x,
         currentOffsetY: canvasState.offset.y,
-        watermarkText: tree.name ? `OST Builder — ${tree.name}` : 'OST Builder',
+        watermarkText: projectName ? `OST Builder — ${projectName}` : 'OST Builder',
       });
       toast({
         title: 'Export started',
@@ -123,7 +189,30 @@ export function Header() {
         </div>
         <div>
           <h1 className="text-sm font-semibold text-foreground">OST Builder</h1>
-          <p className="text-xs text-muted-foreground">{tree.name}</p>
+          {isEditingName ? (
+            <div className="relative">
+              <Input
+                ref={nameInputRef}
+                value={nameDraft}
+                onChange={(event) => setNameDraft(event.target.value)}
+                onBlur={handleSaveName}
+                onKeyDown={handleNameKeyDown}
+                className="flex h-6 w-64 rounded-md border border-input bg-background px-3 py-1 pr-6 text-xs ring-offset-background placeholder:text-muted-foreground md:text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
+                aria-label="Project name"
+              />
+              <PenLine className="absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={handleStartNameEdit}
+              className="group relative text-xs text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Edit project name"
+            >
+              <span className="block truncate pr-4">{projectName}</span>
+              <PenLine className="absolute right-0 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -139,11 +228,12 @@ export function Header() {
             <DialogHeader>
               <DialogTitle>Edit Markdown Source</DialogTitle>
               <DialogDescription>
-                Edit the raw Markdown structure of your OST. Changes will update the tree when saved.
+                Edit the raw Markdown structure of your Opportunity Solution Tree. Changes will update the tree when saved.
               </DialogDescription>
             </DialogHeader>
             <div className="flex-1 min-h-0">
               <Textarea
+                ref={markdownRef}
                 value={editedMarkdown}
                 onChange={(e) => setEditedMarkdown(e.target.value)}
                 className="h-full font-mono text-sm resize-none"

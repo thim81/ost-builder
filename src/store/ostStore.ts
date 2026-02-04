@@ -60,6 +60,27 @@ interface OSTStore {
 const defaultMarkdown = createDefaultMarkdown();
 const defaultProjectName = 'My Opportunity Solution Tree';
 
+const applyProjectNameToMarkdown = (markdown: string, name: string) => {
+  const safeName = name.trim() || defaultProjectName;
+  const lines = markdown.split('\n');
+  const hasHeading = lines[0]?.startsWith('# ');
+  if (hasHeading) {
+    lines[0] = `# ${safeName}`;
+    return lines.join('\n');
+  }
+
+  return [`# ${safeName}`, '', markdown].join('\n').trimStart();
+};
+
+const extractProjectNameFromMarkdown = (markdown: string) => {
+  const firstLine = markdown.split('\n')[0]?.trim() || '';
+  if (firstLine.startsWith('# ')) {
+    const name = firstLine.slice(2).trim();
+    return name || defaultProjectName;
+  }
+  return defaultProjectName;
+};
+
 export const useOSTStore = create<OSTStore>()(
   persist(
     (set, get) => ({
@@ -263,8 +284,14 @@ export const useOSTStore = create<OSTStore>()(
         })),
 
       setProjectName: (name) =>
-        set({
-          projectName: name.trim() || defaultProjectName,
+        set((state) => {
+          const nextName = name.trim() || defaultProjectName;
+          const nextMarkdown = applyProjectNameToMarkdown(state.markdown, nextName);
+          return {
+            projectName: nextName,
+            markdown: nextMarkdown,
+            tree: parseMarkdownToTree(nextMarkdown),
+          };
         }),
 
       resetTree: () => {
@@ -307,13 +334,13 @@ export const useOSTStore = create<OSTStore>()(
         const decoded = decodeMarkdownFromUrlFragment(fragment);
         if (!decoded) return false;
 
-        const nextTree = parseMarkdownToTree(decoded.markdown);
-        const nextName =
-          decoded.name ||
-          (nextTree.name && nextTree.name !== 'Untitled Tree' ? nextTree.name : defaultProjectName);
+        const rawMarkdown = decoded.markdown;
+        const nextName = decoded.name || defaultProjectName;
+        const nextMarkdown = applyProjectNameToMarkdown(rawMarkdown, nextName);
+        const nextTree = parseMarkdownToTree(nextMarkdown);
 
         set({
-          markdown: decoded.markdown,
+          markdown: nextMarkdown,
           tree: nextTree,
           projectName: nextName,
           selectedCardId: null,
@@ -327,6 +354,7 @@ export const useOSTStore = create<OSTStore>()(
         set({
           markdown,
           tree: parseMarkdownToTree(markdown),
+          projectName: extractProjectNameFromMarkdown(markdown),
           selectedCardId: null,
           editingCardId: null,
         });

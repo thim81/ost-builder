@@ -273,7 +273,9 @@ export function serializeTreeToMarkdown(tree: OSTTree): string {
 }
 
 export function createDefaultMarkdown(): string {
-  return `## [Outcome] Increase user engagement by 40% @on-track
+  return `# My Opportunity Solution Tree
+
+## [Outcome] Increase user engagement by 40% @on-track
 Our primary goal for Q1 2026
 - start: 0
 - current: 28
