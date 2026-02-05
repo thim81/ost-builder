@@ -45,9 +45,9 @@ npx skills add https://github.com/thim81/ost-builder/skills --skill opportunity-
 
 Many product managers are familiar with Opportunity Solution Trees through Teresa Torres’ *Continuous Discovery Habits*, but applying them in practice can still be challenging. While the concept is powerful, working with templates and slides (like Miro or decks) often feels time‑consuming tweaking to make it look good when all you want is a clear, readable OST.
 
-The goal was a visual tool, something lightweight and fast, allowing to focus on thinking instead of formatting.
+The goal was to have a visual tool, something lightweight and fast, allowing PMs to focus on thinking about the Opportunities & Solutions instead of the formatting.
 
-With OST-builder I can type Markdown or add Opportunities/Solutions directly, share it with teammates, and call it a day. And because it’s Markdown, it works great with AI assistants & LLMs too.
+With OST-builder, you can type Markdown or add Opportunities/Solutions directly, share it with teammates, and call it a day. And because it’s Markdown, it works great with AI assistants & LLMs like Claude or ChatGPT.
 
 This project is open‑source and free — my small way to give back to the PM community. Feedback is very welcome.
 
