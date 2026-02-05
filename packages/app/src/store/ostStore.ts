@@ -431,7 +431,11 @@ export const useOSTStore = create<OSTStore>()(
       getShareLink: () => {
         // URL fragment is client-side only and doesn't hit the server.
         // NOTE: long trees can still exceed browser URL limits.
-        const fragment = encodeMarkdownToUrlFragment(get().markdown, get().projectName);
+        const fragment = encodeMarkdownToUrlFragment(get().markdown, get().projectName, {
+          layoutDirection: get().layoutDirection,
+          experimentLayout: get().experimentLayout,
+          viewDensity: get().viewDensity,
+        });
 
         // Use current location if available (browser), otherwise return fragment-only.
         if (typeof window !== 'undefined') {
@@ -459,11 +463,17 @@ export const useOSTStore = create<OSTStore>()(
         const nextName = decoded.name || defaultProjectName;
         const nextMarkdown = applyProjectNameToMarkdown(rawMarkdown, nextName);
         const nextTree = parseMarkdownToTree(nextMarkdown);
+        const nextLayoutDirection = decoded.settings?.layoutDirection;
+        const nextExperimentLayout = decoded.settings?.experimentLayout;
+        const nextViewDensity = decoded.settings?.viewDensity;
 
         set({
           markdown: nextMarkdown,
           tree: nextTree,
           projectName: nextName,
+          layoutDirection: nextLayoutDirection ?? get().layoutDirection,
+          experimentLayout: nextExperimentLayout ?? get().experimentLayout,
+          viewDensity: nextViewDensity ?? get().viewDensity,
           selectedCardId: null,
           editingCardId: null,
         });
