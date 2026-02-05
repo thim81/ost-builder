@@ -1,0 +1,48 @@
+{
+  "name": "ost-builder",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Opportunity Solution Tree Builder - Build and visualize Opportunity Solution Trees for product discovery.",
+  "type": "module",
+  "bin": {
+    "ost-builder": "dist/index.js"
+  },
+  "files": [
+    "dist/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepare": "npm run build",
+    "prepublishOnly": "cp ../../README.md ./README.md",
+    "release": "npx np --branch main"
+  },
+  "dependencies": {
+    "@ost-builder/shared": "0.1.0"
+  },
+  "engines": {
+    "node": ">=18.18.0"
+  },
+  "author": "Tim Haselaars",
+  "keywords": [
+    "ost",
+    "opportunity-solution-tree",
+    "markdown",
+    "cli",
+    "product-management",
+    "discovery"
+  ],
+  "license": "MIT",
+  "homepage": "https://ost-builder.pages.dev/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thim81/ost-builder.git"
+  },
+  "bugs": {
+    "url": "https://github.com/thim81/ost-builder/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

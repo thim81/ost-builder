@@ -18,7 +18,7 @@ Live demo: [https://ost-builder.pages.dev](https://ost-builder.pages.dev)
 - Built‑in templates and examples
 - Horizontal or vertical layouts 
 - Compact or full card density
-- Privacy - All data is stored only in your browser
+- Privacy – All data is stored only in your browser
 
 ## CLI
 

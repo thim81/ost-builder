@@ -1,0 +1,53 @@
+{
+  "name": "@ost-builder/shared",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Shared types and Markdown utilities for the Opportunity Solution Tree (OST) Builder.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepare": "npm run build",
+    "release": "npx np --branch main"
+  },
+  "dependencies": {
+    "nanoid": "^5.1.6"
+  },
+  "engines": {
+    "node": ">=18.18.0"
+  },
+  "author": "Tim Haselaars",
+  "keywords": [
+    "ost",
+    "opportunity-solution-tree",
+    "markdown",
+    "typescript",
+    "shared",
+    "product-management",
+    "discovery"
+  ],
+  "license": "MIT",
+  "homepage": "https://ost-builder.pages.dev/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thim81/ost-builder.git"
+  },
+  "bugs": {
+    "url": "https://github.com/thim81/ost-builder/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

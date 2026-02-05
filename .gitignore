@@ -6,10 +6,12 @@ coverage
 # Idea
 .idea/
 
+# Scratchpad
+.tmp
+
 # Agents
 .codex
 .claude
 .agent
 .agents
-skills
 .vite

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Opportunity Solution Tree Builder"
+  short_description: "Create OST Markdown for ost-builder"
+  default_prompt: "Help me write valid ost-builder Markdown for an Opportunity Solution Tree."
