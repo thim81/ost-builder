@@ -1,0 +1,34 @@
+{
+  "name": "ost-builder",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "bin": {
+    "ost-builder": "dist/index.js"
+  },
+  "files": [
+    "dist/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepare": "npm run build",
+    "release": "npx np --branch main"
+  },
+  "dependencies": {
+    "@ost-builder/shared": "0.1.0"
+  },
+  "engines": {
+    "node": ">=18.18.0"
+  },
+  "license": "MIT",
+  "homepage": "https://ost-builder.pages.dev/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thim81/ost-builder"
+  },
+  "bugs": {
+    "url": "https://github.com/thim81/ost-builder/issues"
+  }
+}
