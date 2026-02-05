@@ -26,7 +26,7 @@ If you are working with your markdown file on your laptop, you can use the CLI t
 Or convert it to JSON format or print the structured tree locally.
 
 Examples:
-- View the Opportunity tree in your browser: `npx ost-builder ./my-tree.md --share`
+- View the Opportunity tree in your browser: `npx ost-builder ./my-tree.md`
 - Generate a shareable link: `npx ost-builder ./my-tree.md --share`
 - Output Opportunity tree as JSON: `npx ost-builder ./my-tree.md --format json --pretty`
 - Output Opportunity tree as Markdown: `npx ost-builder ./my-tree.md --format markdown`
