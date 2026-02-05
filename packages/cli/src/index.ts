@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
+import { spawn } from 'node:child_process';
 import {
   parseMarkdownToTree,
   serializeTreeToMarkdown,
@@ -10,8 +11,10 @@ import {
 interface CliOptions {
   inputPath?: string;
   share: boolean;
+  show: boolean;
   shareBase: string;
   format: 'json' | 'markdown';
+  formatExplicit: boolean;
   pretty: boolean;
   name?: string;
 }
@@ -19,17 +22,18 @@ interface CliOptions {
 const DEFAULT_SHARE_BASE = 'https://ost-builder.pages.dev/';
 
 const printHelp = () => {
-  console.log(`OST Builder CLI
+  console.log(`Opportunity Solution Tree (OST) Builder CLI ✨
 
 Usage:
   ost-builder <file.md> [options]
 
 Options:
+  --show                    Open the shareable link in your browser. 🚀
+  --share                   Print a shareable link that can be copied. 🔗
+  --name <name>             Override the tree name with a new name.
   --format <json|markdown>  Output format (default: json).
   --pretty                  Pretty-print JSON output.
-  --share                   Print a shareable link (base URL + encoded hash).
   --share-base <url>        Base URL for share links (default: ${DEFAULT_SHARE_BASE}).
-  --name <name>             Override the tree name when serializing.
   --help, -h                Show this help message.
 `);
 };
@@ -37,10 +41,13 @@ Options:
 const parseArgs = (args: string[]): CliOptions => {
   const options: CliOptions = {
     share: false,
+    show: false,
     shareBase: DEFAULT_SHARE_BASE,
     format: 'json',
+    formatExplicit: false,
     pretty: false,
   };
+  let sawFlag = false;
 
   for (let i = 0; i < args.length; i += 1) {
     const arg = args[i];
@@ -54,9 +61,16 @@ const parseArgs = (args: string[]): CliOptions => {
         break;
       case '--share':
         options.share = true;
+        sawFlag = true;
+        break;
+      case '--show':
+        options.show = true;
+        options.share = true;
+        sawFlag = true;
         break;
       case '--pretty':
         options.pretty = true;
+        sawFlag = true;
         break;
       case '--format': {
         const value = args[i + 1];
@@ -64,6 +78,8 @@ const parseArgs = (args: string[]): CliOptions => {
           throw new Error('Expected --format json or markdown.');
         }
         options.format = value;
+        options.formatExplicit = true;
+        sawFlag = true;
         i += 1;
         break;
       }
@@ -71,6 +87,7 @@ const parseArgs = (args: string[]): CliOptions => {
         const value = args[i + 1];
         if (!value) throw new Error('Expected a URL after --share-base.');
         options.shareBase = value;
+        sawFlag = true;
         i += 1;
         break;
       }
@@ -78,6 +95,7 @@ const parseArgs = (args: string[]): CliOptions => {
         const value = args[i + 1];
         if (!value) throw new Error('Expected a name after --name.');
         options.name = value;
+        sawFlag = true;
         i += 1;
         break;
       }
@@ -94,7 +112,26 @@ const parseArgs = (args: string[]): CliOptions => {
     }
   }
 
+  if (!sawFlag && options.inputPath) {
+    options.show = true;
+    options.share = true;
+  }
+
   return options;
+};
+
+const openUrl = (url: string) => {
+  if (process.platform === 'darwin') {
+    spawn('open', [url], { stdio: 'ignore', detached: true }).unref();
+    return;
+  }
+
+  if (process.platform === 'win32') {
+    spawn('cmd', ['/c', 'start', '', url], { stdio: 'ignore', detached: true }).unref();
+    return;
+  }
+
+  spawn('xdg-open', [url], { stdio: 'ignore', detached: true }).unref();
 };
 
 const formatTreeAsJson = (tree: unknown, pretty: boolean): string =>
@@ -125,10 +162,16 @@ const main = async () => {
     tree.name = options.name;
   }
 
-  if (options.format === 'markdown') {
-    console.log(currentMarkdown);
-  } else {
-    console.log(formatTreeAsJson(tree, options.pretty));
+  const shouldPrint =
+    !(options.share && options.format === 'json') &&
+    !(options.show && !options.formatExplicit);
+
+  if (shouldPrint) {
+    if (options.format === 'markdown') {
+      console.log(currentMarkdown);
+    } else {
+      console.log(formatTreeAsJson(tree, options.pretty));
+    }
   }
 
   if (options.share) {
@@ -138,7 +181,12 @@ const main = async () => {
         ? currentMarkdown
         : serializeTreeToMarkdown(tree, options.name || tree.name);
     const fragment = encodeMarkdownToUrlFragment(shareMarkdown, options.name || tree.name);
-    console.error(`Share link: ${base.replace(/\/?$/, '/')}#${fragment}`);
+    const shareLink = `${base.replace(/\/?$/, '/')}#${fragment}`;
+    if (options.show) {
+      console.error(`🚀 Opening "${options.name || tree.name}" in your browser... `);
+      openUrl(shareLink);
+    }
+    console.error(`🔗 Copy the following Share link:\n${shareLink} \n`);
   }
 };
 

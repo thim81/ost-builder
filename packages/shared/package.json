@@ -18,7 +18,8 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "release": "npx np --branch main"
   },
   "dependencies": {
     "nanoid": "^5.1.6"

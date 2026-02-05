@@ -6,6 +6,9 @@ coverage
 # Idea
 .idea/
 
+# Scratchpad
+.tmp
+
 # Agents
 .codex
 .claude

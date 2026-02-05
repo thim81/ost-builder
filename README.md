@@ -20,20 +20,16 @@ Live demo: [https://ost-builder.pages.dev](https://ost-builder.pages.dev)
 - Compact or full card density
 - All data is stored only in your browser
 
-## CLI (npx)
+## CLI
 
-Run the CLI via `npx` to parse a Markdown OST, apply a skill, and either print the structured tree locally or generate a shareable link.
+If you are working with your markdown file on your laptop, you can use the CLI to quickly visualise it in your browser or to generate a shareable link.
+Or convert it to JSON format or print the structured tree locally.
 
 Examples:
-- Run locally from this repo: `npx --yes . ./my-tree.md`
-- Run from GitHub: `npx --yes github:<owner>/ost-builder ./my-tree.md`
-- Output Markdown instead of JSON: `npx --yes github:<owner>/ost-builder ./my-tree.md --format markdown`
-- Generate a shareable link: `npx --yes github:<owner>/ost-builder ./my-tree.md --share`
-
-Notes:
-- Share links use `https://ost-builder.pages.dev/` by default. Override with `--share-base`.
-- When `--share` is set, the link is printed to stderr so JSON output remains machine-readable on stdout.
-- If you run `npx --yes .` from a local checkout, run `npm run build:cli` first.
+- View the Oppertunity tree in your browser: `npx ost-builder ./my-tree.md --share`
+- Generate a shareable link: `npx ost-builder ./my-tree.md --share`
+- Output Oppertunity tree as JSON: `npx ost-builder ./my-tree.md --format json --pretty`
+- Output Oppertunity tree as Markdown: `npx ost-builder ./my-tree.md --format markdown`
 
 ## Why it exists
 

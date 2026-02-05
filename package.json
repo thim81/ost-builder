@@ -12,6 +12,8 @@
     "build:app": "npm -w @ost-builder/app run build",
     "build:shared": "npm -w @ost-builder/shared run build",
     "build:cli": "npm -w @ost-builder/shared run build && npm -w ost-builder run build",
+    "release:shared": "npm -w @ost-builder/shared run build && npm -w @ost-builder/shared run release",
+    "release:cli": "npm -w @ost-builder/shared run build && npm -w ost-builder run build && npm -w ost-builder run release",
     "lint": "npm -w @ost-builder/app run lint",
     "format": "npx prettier --write \"packages/**/*.{tsx,ts,css,md,json}\" --config packages/app/.prettierrc",
     "preview": "npm -w @ost-builder/app run preview",
