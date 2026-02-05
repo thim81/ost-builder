@@ -151,11 +151,7 @@ export function UploadAction() {
             <div className="text-xs text-muted-foreground">Selected: {fileName}</div>
           ) : null}
           {statusMessage ? (
-            <div
-              className={`text-xs ${
-                error ? 'text-destructive' : 'text-emerald-600'
-              }`}
-            >
+            <div className={`text-xs ${error ? 'text-destructive' : 'text-emerald-600'}`}>
               {statusMessage}
             </div>
           ) : null}

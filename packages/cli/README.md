@@ -8,7 +8,6 @@ Live demo: [https://ost-builder.pages.dev](https://ost-builder.pages.dev)
 
 ![OST Builder](https://ost-builder.pages.dev/screenshots/ost-builder-showcase.png)
 
-
 ## Features
 
 - Markdown‑first editing with instant tree visualization
@@ -16,7 +15,7 @@ Live demo: [https://ost-builder.pages.dev](https://ost-builder.pages.dev)
 - Export to PNG
 - Works well with AI assistants & LLMs like Claude and ChatGPT
 - Built‑in templates and examples
-- Horizontal or vertical layouts 
+- Horizontal or vertical layouts
 - Compact or full card density
 - Privacy - All data is stored only in your browser
 
@@ -26,7 +25,8 @@ If you are working with your markdown file on your laptop, you can use the CLI t
 Or convert it to JSON format or print the structured tree locally.
 
 Examples:
-- View the Opportunity tree in your browser: `npx ost-builder ./my-tree.md --share`
+
+- View the Opportunity tree in your browser: `npx ost-builder ./my-tree.md`
 - Generate a shareable link: `npx ost-builder ./my-tree.md --share`
 - Output Opportunity tree as JSON: `npx ost-builder ./my-tree.md --format json --pretty`
 - Output Opportunity tree as Markdown: `npx ost-builder ./my-tree.md --format markdown`
@@ -37,13 +37,14 @@ If you are using Claude or ChatGPT, you can use the `opportunity-solution-tree-b
 After installing, you can ask things like “Create an Opportunity Solution Tree in Markdown for X,” or “Update my OST headings and status tags.”
 
 Install the skill:
+
 ```bash
 npx skills add https://github.com/thim81/ost-builder/skills --skill opportunity-solution-tree-builder
 ```
 
 ## Why ost-builder for product teams?
 
-Many product managers are familiar with Opportunity Solution Trees through Teresa Torres’ *Continuous Discovery Habits*, but applying them in practice can still be challenging. While the concept is powerful, working with templates and slides (like Miro or decks) often feels time‑consuming tweaking to make it look good when all you want is a clear, readable OST.
+Many product managers are familiar with Opportunity Solution Trees through Teresa Torres’ _Continuous Discovery Habits_, but applying them in practice can still be challenging. While the concept is powerful, working with templates and slides (like Miro or decks) often feels time‑consuming tweaking to make it look good when all you want is a clear, readable OST.
 
 The goal was to have a visual tool, something lightweight and fast, allowing PMs to focus on thinking about the Opportunities & Solutions instead of the formatting.
 
