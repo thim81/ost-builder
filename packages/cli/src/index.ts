@@ -163,8 +163,7 @@ const main = async () => {
   }
 
   const shouldPrint =
-    !(options.share && options.format === 'json') &&
-    !(options.show && !options.formatExplicit);
+    !(options.share && options.format === 'json') && !(options.show && !options.formatExplicit);
 
   if (shouldPrint) {
     if (options.format === 'markdown') {
