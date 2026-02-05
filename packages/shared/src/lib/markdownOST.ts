@@ -313,6 +313,20 @@ export type ShareSettings = {
 
 type EncodedSettings = string;
 
+const encodeCollapsedIds = (ids?: string[]): string | undefined => {
+  if (!ids || ids.length === 0) return undefined;
+  return ids.join('.');
+};
+
+const decodeCollapsedIds = (value?: string): string[] | undefined => {
+  if (!value || typeof value !== 'string') return undefined;
+  const ids = value
+    .split('.')
+    .map((id) => id.trim())
+    .filter(Boolean);
+  return ids.length ? ids : undefined;
+};
+
 const encodeSettings = (settings?: ShareSettings): EncodedSettings | undefined => {
   if (!settings) return undefined;
   const layout =
@@ -354,12 +368,14 @@ export function encodeMarkdownToUrlFragment(
   markdown: string,
   name?: string,
   settings?: ShareSettings,
+  collapsedIds?: string[],
 ): string {
   const payload = JSON.stringify({
     v: 2,
     m: markdown,
     n: name || '',
     s: encodeSettings(settings),
+    c: encodeCollapsedIds(collapsedIds),
   });
   return encodeStringToUrlFragment(payload);
 }
@@ -370,7 +386,7 @@ export function encodeMarkdownToUrlFragment(
  */
 export function decodeMarkdownFromUrlFragment(
   fragment: string,
-): { markdown: string; name?: string; settings?: ShareSettings } | null {
+): { markdown: string; name?: string; settings?: ShareSettings; collapsedIds?: string[] } | null {
   try {
     if (!fragment) return null;
 
@@ -383,6 +399,7 @@ export function decodeMarkdownFromUrlFragment(
         m?: string;
         n?: string;
         s?: ShareSettings | EncodedSettings;
+        c?: string;
       };
       if (typeof parsed?.m === 'string') {
         const settings =
@@ -391,7 +408,8 @@ export function decodeMarkdownFromUrlFragment(
             : parsed && typeof parsed.s === 'object'
               ? parsed.s
               : undefined;
-        return { markdown: parsed.m, name: parsed.n || undefined, settings };
+        const collapsedIds = decodeCollapsedIds(parsed.c);
+        return { markdown: parsed.m, name: parsed.n || undefined, settings, collapsedIds };
       }
     } catch {
       // Fall through to legacy format.

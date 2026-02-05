@@ -632,6 +632,19 @@ describe('encodeMarkdownToUrlFragment', () => {
       });
     });
 
+    it('should encode and decode collapsed card ids', () => {
+      const markdown = samples.MINIMAL_SAMPLES.outcome;
+      const fragment = encodeMarkdownToUrlFragment(
+        markdown,
+        'My Tree',
+        { layoutDirection: 'vertical' },
+        ['n_abc123', 'n_def456'],
+      );
+      const decoded = decodeMarkdownFromUrlFragment(fragment);
+      expect(decoded).not.toBeNull();
+      expect(decoded?.collapsedIds).toEqual(['n_abc123', 'n_def456']);
+    });
+
     it('should decode compact settings strings', () => {
       const markdown = samples.MINIMAL_SAMPLES.outcome;
       const fragment = encodeMarkdownToUrlFragment(markdown, 'My Tree', {
