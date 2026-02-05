@@ -1,6 +1,7 @@
 import { TreeDeciduous } from 'lucide-react';
 import { ProjectName } from './header/ProjectName';
 import { MarkdownEditorAction } from './header/actions/MarkdownEditorAction';
+import { UploadAction } from './header/actions/UploadAction';
 import { CreateNewAction } from './header/actions/CreateNewAction';
 import { ResetAction } from './header/actions/ResetAction';
 import { ExportAction } from './header/actions/ExportAction';
@@ -22,6 +23,7 @@ export function Header() {
       <div className="flex items-center gap-2">
         <MarkdownEditorAction />
         <CreateNewAction />
+        <UploadAction />
         <ResetAction />
         <LayoutToggleAction />
         <ExportAction />
