@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "npm -w @ost-builder/app run dev",
+    "dev:app": "npm -w @ost-builder/shared run build && npm -w @ost-builder/app run dev",
     "build": "npm -w @ost-builder/app run build",
     "build:app": "npm -w @ost-builder/app run build",
     "build:shared": "npm -w @ost-builder/shared run build",

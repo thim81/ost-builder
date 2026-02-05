@@ -36,6 +36,13 @@ const HEADING_LEVELS: Record<CardType, number> = {
   experiment: 5,
 };
 
+const LEVEL_TYPES: Record<number, CardType> = {
+  2: 'outcome',
+  3: 'opportunity',
+  4: 'solution',
+  5: 'experiment',
+};
+
 const STATUS_MAP: Record<string, CardStatus> = {
   'on-track': 'on-track',
   'at-risk': 'at-risk',
@@ -66,13 +73,21 @@ function parseHeadingLine(line: string): { level: number; content: string } | nu
 
 function parseCardHeading(
   content: string,
+  level: number,
 ): Omit<ParsedCard, 'level' | 'description' | 'metrics'> | null {
   // Match: [Type] Title @status or [Type] Title (legacy {#id} is ignored)
   const typeMatch = content.match(/^\[(Outcome|Opportunity|Solution|Experiment)\]\s+/i);
-  if (!typeMatch) return null;
+  let type: CardType | null = null;
+  let remaining = content;
 
-  const type = typeMatch[1].toLowerCase() as CardType;
-  let remaining = content.slice(typeMatch[0].length);
+  if (typeMatch) {
+    type = typeMatch[1].toLowerCase() as CardType;
+    remaining = content.slice(typeMatch[0].length);
+  } else if (LEVEL_TYPES[level]) {
+    type = LEVEL_TYPES[level];
+  } else {
+    return null;
+  }
 
   // Strip legacy ID tokens if present
   const idMatch = remaining.match(/\{#([^}]+)\}/);
@@ -218,7 +233,7 @@ export function parseMarkdownToTree(markdown: string): OSTTree {
 
     if (heading) {
       // H2-H5 are card headings
-      const cardInfo = parseCardHeading(heading.content);
+      const cardInfo = parseCardHeading(heading.content, heading.level);
       if (cardInfo) {
         finalizeCard();
         currentCard = { ...cardInfo, level: heading.level };

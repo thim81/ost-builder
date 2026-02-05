@@ -13,7 +13,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      '@ost-builder/shared': path.resolve(__dirname, '../shared/src'),
+      '@ost-builder/shared': path.resolve(__dirname, '../shared/dist'),
     },
   },
 });
