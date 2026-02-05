@@ -18,7 +18,7 @@ Live demo: [https://ost-builder.pages.dev](https://ost-builder.pages.dev)
 - Built‑in templates and examples
 - Horizontal or vertical layouts 
 - Compact or full card density
-- Privacy – All data is stored only in your browser
+- Privacy - All data is stored only in your browser
 
 ## CLI
 
@@ -26,10 +26,10 @@ If you are working with your markdown file on your laptop, you can use the CLI t
 Or convert it to JSON format or print the structured tree locally.
 
 Examples:
-- View the Oppertunity tree in your browser: `npx ost-builder ./my-tree.md --share`
+- View the Opportunity tree in your browser: `npx ost-builder ./my-tree.md --share`
 - Generate a shareable link: `npx ost-builder ./my-tree.md --share`
-- Output Oppertunity tree as JSON: `npx ost-builder ./my-tree.md --format json --pretty`
-- Output Oppertunity tree as Markdown: `npx ost-builder ./my-tree.md --format markdown`
+- Output Opportunity tree as JSON: `npx ost-builder ./my-tree.md --format json --pretty`
+- Output Opportunity tree as Markdown: `npx ost-builder ./my-tree.md --format markdown`
 
 ## AI Skill for Claude and ChatGPT
 
