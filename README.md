@@ -14,11 +14,11 @@ Live demo: [https://ost-builder.pages.dev](https://ost-builder.pages.dev)
 - Markdown‑first editing with instant tree visualization
 - Shareable links (no account required)
 - Export to PNG
-- Works well with AI assistants & LLMs
+- Works well with AI assistants & LLMs like Claude and ChatGPT
 - Built‑in templates and examples
 - Horizontal or vertical layouts 
 - Compact or full card density
-- All data is stored only in your browser
+- Privacy - All data is stored only in your browser
 
 ## CLI
 
@@ -31,7 +31,17 @@ Examples:
 - Output Oppertunity tree as JSON: `npx ost-builder ./my-tree.md --format json --pretty`
 - Output Oppertunity tree as Markdown: `npx ost-builder ./my-tree.md --format markdown`
 
-## Why it exists
+## AI Skill for Claude and ChatGPT
+
+If you are using Claude or ChatGPT, you can use the `opportunity-solution-tree-builder` skill to generate an Opportunity Solution Tree from scratch.
+After installing, you can ask things like “Create an Opportunity Solution Tree in Markdown for X,” or “Update my OST headings and status tags.”
+
+Install the skill:
+```bash
+npx skills add https://github.com/thim81/ost-builder/skills --skill opportunity-solution-tree-builder
+```
+
+## Why ost-builder for product teams?
 
 Many product managers are familiar with Opportunity Solution Trees through Teresa Torres’ *Continuous Discovery Habits*, but applying them in practice can still be challenging. While the concept is powerful, working with templates and slides (like Miro or decks) often feels time‑consuming tweaking to make it look good when all you want is a clear, readable OST.
 
