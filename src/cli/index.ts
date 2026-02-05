@@ -5,7 +5,7 @@ import {
   parseMarkdownToTree,
   serializeTreeToMarkdown,
   encodeMarkdownToUrlFragment,
-} from '../lib/markdownOST';
+} from '../lib/markdownOST.js';
 
 interface CliOptions {
   inputPath?: string;

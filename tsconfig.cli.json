@@ -9,8 +9,7 @@
     "strict": true,
     "skipLibCheck": true,
     "types": ["node"],
-    "esModuleInterop": true,
-    "preserveShebang": true
+    "esModuleInterop": true
   },
   "include": ["src/cli/**/*", "src/lib/markdownOST.ts", "src/types/ost.ts", "src/lib/ostExamples.ts"]
 }
