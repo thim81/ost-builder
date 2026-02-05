@@ -16,7 +16,7 @@
     "build": "tsc -p tsconfig.json",
     "prepare": "npm run build && npm run prepublishOnly",
     "prepublishOnly": "cp ../../README.md ./README.md",
-    "release": "npm run build && npx np --branch main"
+    "release": "npm run prepare && npx np --branch main"
   },
   "dependencies": {
     "@ost-builder/shared": "^0.1.0"
