@@ -20,7 +20,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "prepare": "npm run build",
-    "release": "npx np --branch main"
+    "release": "npx np --branch main --no-release --no-git"
   },
   "dependencies": {
     "nanoid": "^5.1.6"
