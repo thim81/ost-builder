@@ -24,6 +24,12 @@ Test sidebar vs. inline placement
 
 ### [Opportunity] Onboarding flow is too complex
 High drop-off rate at step 3
+
+#### [Solution] Simplify step 3 with clearer guidance
+Reduce cognitive load with shorter copy and inline help
+
+##### [Experiment] A/B test guided step 3
+Compare completion rate with guided vs. current flow
 `;
 
 export const OST_EXAMPLES: OSTExample[] = [
