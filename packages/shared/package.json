@@ -20,7 +20,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "prepare": "npm run build",
-    "release": "npm run build && npx np --branch main --no-release --no-git"
+    "test": "echo \"no tests\"",
+    "release": "npm run build && npm publish --access public"
   },
   "dependencies": {
     "nanoid": "^5.1.6"
