@@ -27,6 +27,7 @@ interface OSTStore {
   layoutDirection: LayoutDirection;
   experimentLayout: 'horizontal' | 'vertical';
   viewDensity: 'full' | 'compact';
+  collapsedCardIds: string[];
   selectedCardId: string | null;
   editingCardId: string | null;
 
@@ -49,6 +50,8 @@ interface OSTStore {
   toggleLayoutDirection: () => void;
   setExperimentLayout: (layout: 'horizontal' | 'vertical') => void;
   setViewDensity: (density: 'full' | 'compact') => void;
+  toggleCollapsedCard: (cardId: string) => void;
+  setCollapsedCards: (cardIds: string[]) => void;
 
   // Tree management
   resetTree: () => void;
@@ -101,6 +104,7 @@ export const useOSTStore = create<OSTStore>()(
       layoutDirection: 'vertical',
       experimentLayout: 'vertical',
       viewDensity: 'full',
+      collapsedCardIds: [],
       selectedCardId: null,
       editingCardId: null,
 
@@ -390,6 +394,15 @@ export const useOSTStore = create<OSTStore>()(
         })),
       setExperimentLayout: (layout) => set({ experimentLayout: layout }),
       setViewDensity: (density) => set({ viewDensity: density }),
+      toggleCollapsedCard: (cardId) =>
+        set((state) => {
+          const exists = state.collapsedCardIds.includes(cardId);
+          const nextIds = exists
+            ? state.collapsedCardIds.filter((id) => id !== cardId)
+            : [...state.collapsedCardIds, cardId];
+          return { collapsedCardIds: nextIds };
+        }),
+      setCollapsedCards: (cardIds) => set({ collapsedCardIds: cardIds }),
 
       setProjectName: (name) =>
         set((state) => {
@@ -411,6 +424,7 @@ export const useOSTStore = create<OSTStore>()(
           editingCardId: null,
           canvasState: { zoom: 1, offset: { x: 0, y: 0 } },
           projectName: defaultProjectName,
+          collapsedCardIds: [],
         });
       },
 
@@ -424,6 +438,7 @@ export const useOSTStore = create<OSTStore>()(
           selectedCardId: null,
           editingCardId: null,
           canvasState: { zoom: 1, offset: { x: 0, y: 0 } },
+          collapsedCardIds: [],
         });
       },
 
@@ -431,7 +446,16 @@ export const useOSTStore = create<OSTStore>()(
       getShareLink: () => {
         // URL fragment is client-side only and doesn't hit the server.
         // NOTE: long trees can still exceed browser URL limits.
-        const fragment = encodeMarkdownToUrlFragment(get().markdown, get().projectName);
+        const fragment = encodeMarkdownToUrlFragment(
+          get().markdown,
+          get().projectName,
+          {
+            layoutDirection: get().layoutDirection,
+            experimentLayout: get().experimentLayout,
+            viewDensity: get().viewDensity,
+          },
+          get().collapsedCardIds,
+        );
 
         // Use current location if available (browser), otherwise return fragment-only.
         if (typeof window !== 'undefined') {
@@ -459,11 +483,19 @@ export const useOSTStore = create<OSTStore>()(
         const nextName = decoded.name || defaultProjectName;
         const nextMarkdown = applyProjectNameToMarkdown(rawMarkdown, nextName);
         const nextTree = parseMarkdownToTree(nextMarkdown);
+        const nextLayoutDirection = decoded.settings?.layoutDirection;
+        const nextExperimentLayout = decoded.settings?.experimentLayout;
+        const nextViewDensity = decoded.settings?.viewDensity;
+        const nextCollapsedIds = decoded.collapsedIds ?? [];
 
         set({
           markdown: nextMarkdown,
           tree: nextTree,
           projectName: nextName,
+          layoutDirection: nextLayoutDirection ?? get().layoutDirection,
+          experimentLayout: nextExperimentLayout ?? get().experimentLayout,
+          viewDensity: nextViewDensity ?? get().viewDensity,
+          collapsedCardIds: nextCollapsedIds,
           selectedCardId: null,
           editingCardId: null,
         });
@@ -478,6 +510,7 @@ export const useOSTStore = create<OSTStore>()(
           projectName: extractProjectNameFromMarkdown(markdown),
           selectedCardId: null,
           editingCardId: null,
+          collapsedCardIds: [],
         });
       },
     }),
@@ -489,6 +522,7 @@ export const useOSTStore = create<OSTStore>()(
         layoutDirection: state.layoutDirection,
         experimentLayout: state.experimentLayout,
         viewDensity: state.viewDensity,
+        collapsedCardIds: state.collapsedCardIds,
       }),
       onRehydrateStorage: () => (state) => {
         // Re-parse tree from markdown on rehydration

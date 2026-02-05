@@ -22,9 +22,16 @@ const childTypeMap: Record<CardType, CardType> = {
 };
 
 export function TreeNode({ cardId, depth = 0 }: TreeNodeProps) {
-  const { tree, addCard, layoutDirection, experimentLayout } = useOSTStore();
+  const {
+    tree,
+    addCard,
+    layoutDirection,
+    experimentLayout,
+    collapsedCardIds,
+    toggleCollapsedCard,
+  } = useOSTStore();
   const card = tree.cards[cardId];
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const isCollapsed = collapsedCardIds.includes(cardId);
   const isHorizontal = layoutDirection === 'horizontal';
 
   const { setNodeRef, isOver } = useDroppable({
@@ -122,7 +129,7 @@ export function TreeNode({ cardId, depth = 0 }: TreeNodeProps) {
         {/* Collapse button */}
         {children.length > 0 && (
           <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
+            onClick={() => toggleCollapsedCard(cardId)}
             className={cn(
               'absolute w-8 h-8 bg-card border border-border rounded-full flex items-center justify-center shadow-sm hover:bg-muted transition-colors z-10',
               isHorizontal

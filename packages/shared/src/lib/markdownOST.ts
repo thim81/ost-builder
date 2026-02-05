@@ -305,8 +305,78 @@ export function createDefaultMarkdown(): string {
  *
  * Typical use: `${location.pathname}#${encodeMarkdownToUrlFragment(markdown, name)}`
  */
-export function encodeMarkdownToUrlFragment(markdown: string, name?: string): string {
-  const payload = JSON.stringify({ v: 1, m: markdown, n: name || '' });
+export type ShareSettings = {
+  layoutDirection?: 'vertical' | 'horizontal';
+  experimentLayout?: 'horizontal' | 'vertical';
+  viewDensity?: 'full' | 'compact';
+};
+
+type EncodedSettings = string;
+
+const encodeCollapsedIds = (ids?: string[]): string | undefined => {
+  if (!ids || ids.length === 0) return undefined;
+  return ids.join('.');
+};
+
+const decodeCollapsedIds = (value?: string): string[] | undefined => {
+  if (!value || typeof value !== 'string') return undefined;
+  const ids = value
+    .split('.')
+    .map((id) => id.trim())
+    .filter(Boolean);
+  return ids.length ? ids : undefined;
+};
+
+const encodeSettings = (settings?: ShareSettings): EncodedSettings | undefined => {
+  if (!settings) return undefined;
+  const layout =
+    settings.layoutDirection === 'horizontal'
+      ? 'h'
+      : settings.layoutDirection === 'vertical'
+        ? 'v'
+        : '';
+  const experiment =
+    settings.experimentLayout === 'horizontal'
+      ? 'h'
+      : settings.experimentLayout === 'vertical'
+        ? 'v'
+        : '';
+  const density =
+    settings.viewDensity === 'compact' ? 'c' : settings.viewDensity === 'full' ? 'f' : '';
+  const encoded = `${layout}${experiment}${density}`;
+  return encoded.length ? encoded : undefined;
+};
+
+const decodeSettings = (value?: EncodedSettings): ShareSettings | undefined => {
+  if (!value || typeof value !== 'string') return undefined;
+  const [layoutChar, experimentChar, densityChar] = value.split('');
+  const settings: ShareSettings = {};
+
+  if (layoutChar === 'h') settings.layoutDirection = 'horizontal';
+  if (layoutChar === 'v') settings.layoutDirection = 'vertical';
+
+  if (experimentChar === 'h') settings.experimentLayout = 'horizontal';
+  if (experimentChar === 'v') settings.experimentLayout = 'vertical';
+
+  if (densityChar === 'c') settings.viewDensity = 'compact';
+  if (densityChar === 'f') settings.viewDensity = 'full';
+
+  return Object.keys(settings).length ? settings : undefined;
+};
+
+export function encodeMarkdownToUrlFragment(
+  markdown: string,
+  name?: string,
+  settings?: ShareSettings,
+  collapsedIds?: string[],
+): string {
+  const payload = JSON.stringify({
+    v: 2,
+    m: markdown,
+    n: name || '',
+    s: encodeSettings(settings),
+    c: encodeCollapsedIds(collapsedIds),
+  });
   return encodeStringToUrlFragment(payload);
 }
 
@@ -316,7 +386,7 @@ export function encodeMarkdownToUrlFragment(markdown: string, name?: string): st
  */
 export function decodeMarkdownFromUrlFragment(
   fragment: string,
-): { markdown: string; name?: string } | null {
+): { markdown: string; name?: string; settings?: ShareSettings; collapsedIds?: string[] } | null {
   try {
     if (!fragment) return null;
 
@@ -324,9 +394,22 @@ export function decodeMarkdownFromUrlFragment(
     if (!decoded) return null;
 
     try {
-      const parsed = JSON.parse(decoded) as { v?: number; m?: string; n?: string };
+      const parsed = JSON.parse(decoded) as {
+        v?: number;
+        m?: string;
+        n?: string;
+        s?: ShareSettings | EncodedSettings;
+        c?: string;
+      };
       if (typeof parsed?.m === 'string') {
-        return { markdown: parsed.m, name: parsed.n || undefined };
+        const settings =
+          parsed && typeof parsed.s === 'string'
+            ? decodeSettings(parsed.s)
+            : parsed && typeof parsed.s === 'object'
+              ? parsed.s
+              : undefined;
+        const collapsedIds = decodeCollapsedIds(parsed.c);
+        return { markdown: parsed.m, name: parsed.n || undefined, settings, collapsedIds };
       }
     } catch {
       // Fall through to legacy format.
