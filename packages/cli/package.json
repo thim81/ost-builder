@@ -1,6 +1,6 @@
 {
   "name": "ost-builder",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": false,
   "description": "Opportunity Solution Tree Builder - Build and visualize Opportunity Solution Trees for product discovery.",
   "type": "module",
@@ -14,12 +14,12 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "prepare": "npm run build",
+    "prepare": "npm run build && npm run prepublishOnly",
     "prepublishOnly": "cp ../../README.md ./README.md",
-    "release": "npx np --branch main"
+    "release": "npm run build && npx np --branch main"
   },
   "dependencies": {
-    "@ost-builder/shared": "0.1.0"
+    "@ost-builder/shared": "^0.0.1"
   },
   "engines": {
     "node": ">=18.18.0"
