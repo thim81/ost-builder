@@ -20,7 +20,7 @@
     "release": "npm run prepare && npx np --branch main"
   },
   "dependencies": {
-    "@ost-builder/shared": "^0.2.0"
+    "@ost-builder/shared": "^0.3.0"
   },
   "engines": {
     "node": ">=18.18.0"
