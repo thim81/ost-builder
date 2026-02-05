@@ -1,6 +1,6 @@
 {
   "name": "@ost-builder/shared",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": false,
   "description": "Shared types and Markdown utilities for the Opportunity Solution Tree (OST) Builder.",
   "type": "module",
