@@ -854,4 +854,20 @@ describe('full workflow integration', () => {
       expect(child2.children.length).toBe(child1.children.length);
     }
   });
+
+  it('should fallback to heading levels when type prefixes are missing', () => {
+    const markdown = [
+      '## Outcome heading',
+      '### Opportunity heading',
+      '#### Solution heading',
+      '##### Experiment heading',
+    ].join('\n');
+
+    const tree = parseMarkdownToTree(markdown);
+    expect(tree.rootIds).toHaveLength(1);
+    expect(countCardsByType(tree, 'outcome')).toBe(1);
+    expect(countCardsByType(tree, 'opportunity')).toBe(1);
+    expect(countCardsByType(tree, 'solution')).toBe(1);
+    expect(countCardsByType(tree, 'experiment')).toBe(1);
+  });
 });
