@@ -1,8 +1,7 @@
 import { nanoid } from 'nanoid';
 import type { OSTCard, OSTTree, CardType, CardStatus } from '@/types/ost';
 import { DEFAULT_OST_TEMPLATE } from '@/lib/ostExamples';
-// import type { OSTCard, OSTTree, CardType, CardStatus } from '../types/ost';
-// import { DEFAULT_OST_TEMPLATE } from './ostExamples';
+import { encodeStringToUrlFragment, decodeStringFromUrlFragment } from '@/lib/urlEncoding';
 
 /**
  * Markdown OST Format:
@@ -299,28 +298,11 @@ export function encodeMarkdownToUrlFragment(markdown: string, name?: string): st
 function encodeStringToUrlFragment(value: string): string {
   // Convert UTF-8 bytes -> base64
   const bytes = new TextEncoder().encode(value);
-  let base64: string;
-  const nodeBuffer = (
-    globalThis as {
-      Buffer?: {
-        from: (data: Uint8Array | string, encoding?: string) => Uint8Array & {
-          toString: (encoding: string) => string;
-        };
-      };
-    }
-  ).Buffer;
-
-  if (typeof btoa === 'function') {
-    let binary = '';
-    for (let i = 0; i < bytes.length; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    base64 = btoa(binary);
-  } else if (nodeBuffer) {
-    base64 = nodeBuffer.from(bytes).toString('base64');
-  } else {
-    throw new Error('No base64 encoder available in this environment.');
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
   }
+  const base64 = btoa(binary);
 
   // base64url (RFC 4648)
   return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
@@ -352,36 +334,4 @@ export function decodeMarkdownFromUrlFragment(
   } catch {
     return null;
   }
-}
-
-function decodeStringFromUrlFragment(fragment: string): string | null {
-  // base64url -> base64
-  let base64 = fragment.replace(/-/g, '+').replace(/_/g, '/');
-  // Pad to multiple of 4
-  const pad = base64.length % 4;
-  if (pad) base64 += '='.repeat(4 - pad);
-  let bytes: Uint8Array;
-  const nodeBuffer = (
-    globalThis as {
-      Buffer?: {
-        from: (data: Uint8Array | string, encoding?: string) => Uint8Array & {
-          toString: (encoding: string) => string;
-        };
-      };
-    }
-  ).Buffer;
-
-  if (typeof atob === 'function') {
-    const binary = atob(base64);
-    bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      bytes[i] = binary.charCodeAt(i);
-    }
-  } else if (nodeBuffer) {
-    bytes = nodeBuffer.from(base64, 'base64');
-  } else {
-    throw new Error('No base64 decoder available in this environment.');
-  }
-
-  return new TextDecoder().decode(bytes);
 }

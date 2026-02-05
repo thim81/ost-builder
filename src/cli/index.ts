@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
-import { parseMarkdownToTree, serializeTreeToMarkdown, encodeMarkdownToUrlFragment } from '../lib/markdownOST';
+import {
+  parseMarkdownToTree,
+  serializeTreeToMarkdown,
+  encodeMarkdownToUrlFragment,
+} from '../lib/markdownOST';
 
 interface CliOptions {
   inputPath?: string;
