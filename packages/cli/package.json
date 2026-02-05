@@ -1,6 +1,6 @@
 {
   "name": "ost-builder",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": false,
   "description": "Opportunity Solution Tree Builder - Build and visualize Opportunity Solution Trees for product discovery.",
   "type": "module",
