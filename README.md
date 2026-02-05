@@ -20,6 +20,21 @@ Live demo: [https://ost-builder.pages.dev](https://ost-builder.pages.dev)
 - Compact or full card density
 - All data is stored only in your browser
 
+## CLI (npx)
+
+Run the CLI via `npx` to parse a Markdown OST, apply a skill, and either print the structured tree locally or generate a shareable link.
+
+Examples:
+- Run locally from this repo: `npx --yes . ./my-tree.md`
+- Run from GitHub: `npx --yes github:<owner>/ost-builder ./my-tree.md`
+- Output Markdown instead of JSON: `npx --yes github:<owner>/ost-builder ./my-tree.md --format markdown`
+- Generate a shareable link: `npx --yes github:<owner>/ost-builder ./my-tree.md --share`
+
+Notes:
+- Share links use `https://ost-builder.pages.dev/` by default. Override with `--share-base`.
+- When `--share` is set, the link is printed to stderr so JSON output remains machine-readable on stdout.
+- If you run `npx --yes .` from a local checkout, run `npm run build:cli` first.
+
 ## Why it exists
 
 Many product managers are familiar with Opportunity Solution Trees through Teresa Torres’ *Continuous Discovery Habits*, but applying them in practice can still be challenging. While the concept is powerful, working with templates and slides (like Miro or decks) often feels time‑consuming tweaking to make it look good when all you want is a clear, readable OST.

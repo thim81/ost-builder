@@ -3,12 +3,17 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "bin": {
+    "ost-builder": "dist/cli/cli/index.js"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
+    "build:cli": "tsc -p tsconfig.cli.json",
     "lint": "eslint .",
     "format": "npx prettier --write src//**/*.{tsx,ts,css} --config ./.prettierrc",
+    "prepare": "npm run build:cli",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest"
