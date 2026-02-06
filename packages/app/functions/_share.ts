@@ -1,4 +1,4 @@
-import { encodeStringToUrlFragment } from '../src/lib/urlEncoding';
+import { encodeStringToUrlFragment } from '@ost-builder/shared';
 
 export type ShareLinkInput = {
   markdown: string;

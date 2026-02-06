@@ -1,6 +1,6 @@
 import { createShareLink, jsonResponse, withCors } from '../../_share';
-import { serializeTreeToMarkdown } from '../../../src/lib/markdownOST';
-import type { OSTTree, OSTCard } from '../../../src/types/ost';
+import { serializeTreeToMarkdown } from '@ost-builder/shared';
+import type { OSTTree, OSTCard } from '@ost-builder/shared';
 
 type JsonBody = {
   tree?: OSTTree;
