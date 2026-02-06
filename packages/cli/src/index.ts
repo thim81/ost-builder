@@ -19,7 +19,7 @@ interface CliOptions {
   name?: string;
 }
 
-const DEFAULT_SHARE_BASE = 'https://ost-builder.pages.dev/';
+const DEFAULT_SHARE_BASE = 'https://ost-builder.trinixlabs.dev/';
 
 const printHelp = () => {
   console.log(`Opportunity Solution Tree (OST) Builder CLI ✨
