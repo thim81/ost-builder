@@ -156,7 +156,7 @@ export function ShareAction() {
           <span className="hidden sm:inline">Share</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle>Share Opportunity Tree</DialogTitle>
           <DialogDescription>
@@ -174,7 +174,7 @@ export function ShareAction() {
               mode === 'local' ? 'border-primary bg-primary/5' : 'border-border bg-muted/30'
             }`}
           >
-            <div className="text-sm font-medium">Share locally</div>
+            <div className="text-sm font-medium">Share-only</div>
             <div className="text-xs text-muted-foreground mt-1">Data stays in URL/browser.</div>
           </button>
           {cloudShareUiEnabled && (
@@ -185,20 +185,20 @@ export function ShareAction() {
                 mode === 'cloud' ? 'border-primary bg-primary/5' : 'border-border bg-muted/30'
               }`}
             >
-              <div className="text-sm font-medium">Save in your Account</div>
+              <div className="text-sm font-medium">Save & Share</div>
               <div className="text-xs text-muted-foreground mt-1">
-                Short link, TTL, access controls.
+                Save in your Account with Share link.
               </div>
             </button>
           )}
         </div>
 
         {mode === 'local' && (
-          <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2">
-            <div className="text-sm">Generate a fragment-based link without server storage.</div>
+          <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2 justify-center">
+            <div className="text-sm">Generate a share link without server storage.</div>
             <Button onClick={handleLocalShare} className="gap-2">
               {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
-              {copied ? 'Copied' : 'Copy local share link'}
+              {copied ? 'Copied' : 'Copy share link'}
             </Button>
           </div>
         )}

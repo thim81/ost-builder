@@ -79,7 +79,7 @@ export function AccountMenuAction() {
           {loading
             ? 'Checking account...'
             : user
-              ? user.name || user.email || 'Signed in'
+              ? `Welcome ${user.name}` || `Welcome ${user.email}` || 'Signed in'
               : 'Not signed in'}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
