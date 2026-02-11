@@ -102,7 +102,7 @@ export function MarkdownEditorAction() {
             the tree when saved.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex-1 min-h-0 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+        <div className="flex-1 min-h-0 grid gap-4 lg:grid-cols-[2fr_1fr]">
           <div className="min-h-0">
             <Textarea
               ref={markdownRef}
@@ -131,19 +131,36 @@ export function MarkdownEditorAction() {
                 <code>#####</code> Experiment
               </li>
             </ul>
-            <p className="mb-2">
-              Optional status tag at end of heading:
-              <code className="ml-1">@on-track</code>, <code>@at-risk</code>, <code>@next</code>,{' '}
-              <code>@done</code>
-            </p>
-            <p className="mb-3">
-              Outcome cards can include metrics:
-              <code className="ml-1">- start:</code>, <code>- current:</code>,{' '}
-              <code>- target:</code>
-            </p>
-            <pre className="rounded-md border bg-background p-3 text-xs whitespace-pre-wrap">
-              <code>{SYNTAX_EXAMPLE}</code>
-            </pre>
+            <p className="mb-1">Optional status tags go at the end of a heading:</p>
+            <ul className="list-disc pl-5 space-y-1 mb-3">
+              <li>
+                <code>@next</code> (planned)
+              </li>
+              <li>
+                <code>@on-track</code> (in progress and healthy)
+              </li>
+              <li>
+                <code>@at-risk</code> (blocked or uncertain)
+              </li>
+              <li>
+                <code>@done</code> (completed)
+              </li>
+            </ul>
+            <p className="mb-1">Outcome cards can include metrics as bullet lines:</p>
+            <ul className="list-disc pl-5 space-y-1 mb-3">
+              <li>
+                <code>- start:</code> (baseline)
+              </li>
+              <li>
+                <code>- current:</code> (latest value)
+              </li>
+              <li>
+                <code>- target:</code> (goal)
+              </li>
+            </ul>
+            {/*<pre className="rounded-md border bg-background p-3 text-xs whitespace-pre-wrap">*/}
+            {/*  <code>{SYNTAX_EXAMPLE}</code>*/}
+            {/*</pre>*/}
           </aside>
         </div>
         <DialogFooter className="flex-row justify-between sm:justify-between">

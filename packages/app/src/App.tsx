@@ -15,7 +15,7 @@ import CdnStats from '@/components/analytics/CdnStats';
 import Index from './pages/Index';
 import NotFound from './pages/NotFound';
 import StoredShareOpen from './pages/StoredShareOpen';
-import MyShares from './pages/MyShares';
+import Library from './pages/Library.tsx';
 
 const queryClient = new QueryClient();
 
@@ -98,7 +98,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/s/:id" element={<StoredShareOpen />} />
-          <Route path="/shares" element={<MyShares />} />
+          <Route path="/shares" element={<Library />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

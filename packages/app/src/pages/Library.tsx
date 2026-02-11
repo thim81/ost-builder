@@ -53,7 +53,7 @@ function isCloudFeatureToggleEnabled(): boolean {
   return raw === '1' || raw === 'true' || raw === 'enabled' || raw === 'on';
 }
 
-export default function MyShares() {
+export default function Library() {
   const navigate = useNavigate();
   const { loadFromStoredShare } = useOSTStore();
 
