@@ -17,9 +17,11 @@ export async function onRequest(context: { request: Request }): Promise<Response
   let baseUrl: string | undefined;
 
   if (contentType.includes('application/json')) {
-    const body = (await request.json().catch(() => null)) as
-      | { markdown?: string; name?: string; baseUrl?: string }
-      | null;
+    const body = (await request.json().catch(() => null)) as {
+      markdown?: string;
+      name?: string;
+      baseUrl?: string;
+    } | null;
     markdown = body?.markdown?.trim() || '';
     name = body?.name?.trim() || undefined;
     baseUrl = body?.baseUrl?.trim() || undefined;

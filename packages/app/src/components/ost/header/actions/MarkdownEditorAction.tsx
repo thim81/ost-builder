@@ -13,6 +13,23 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 
+const SYNTAX_EXAMPLE = `# My OST Project
+
+## [Outcome] Improve activation rate @on-track
+Track first-week activation for new users.
+- start: 18
+- current: 24
+- target: 35
+
+### [Opportunity] Users drop off during onboarding @next
+Many users stop before completing setup.
+
+#### [Solution] Add a 3-step onboarding checklist @at-risk
+Show required tasks directly in the dashboard.
+
+##### [Experiment] A/B test checklist visibility @done
+Run for 2 weeks and compare activation lift.`;
+
 export function MarkdownEditorAction() {
   const { getMarkdown, setMarkdown } = useOSTStore();
   const [markdownEditorOpen, setMarkdownEditorOpen] = useState(false);
@@ -77,7 +94,7 @@ export function MarkdownEditorAction() {
           <span className="hidden sm:inline">Markdown</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-3xl h-[80vh] flex flex-col">
+      <DialogContent className="max-w-5xl h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Edit Markdown Source</DialogTitle>
           <DialogDescription>
@@ -85,14 +102,66 @@ export function MarkdownEditorAction() {
             the tree when saved.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex-1 min-h-0">
-          <Textarea
-            ref={markdownRef}
-            value={editedMarkdown}
-            onChange={(e) => setEditedMarkdown(e.target.value)}
-            className="h-full font-mono text-sm resize-none"
-            placeholder="Enter your OST markdown..."
-          />
+        <div className="flex-1 min-h-0 grid gap-4 lg:grid-cols-[2fr_1fr]">
+          <div className="min-h-0">
+            <Textarea
+              ref={markdownRef}
+              value={editedMarkdown}
+              onChange={(e) => setEditedMarkdown(e.target.value)}
+              className="h-full font-mono text-sm resize-none"
+              placeholder="Enter your OST markdown..."
+            />
+          </div>
+          <aside className="min-h-0 rounded-md border bg-muted/30 p-3 text-sm overflow-auto">
+            <h3 className="font-semibold mb-2">Markdown Syntax Guide</h3>
+            <p className="text-muted-foreground mb-3">
+              Use heading levels to define card type and tree depth.
+            </p>
+            <ul className="list-disc pl-5 space-y-1 mb-3">
+              <li>
+                <code>##</code> Outcome
+              </li>
+              <li>
+                <code>###</code> Opportunity
+              </li>
+              <li>
+                <code>####</code> Solution
+              </li>
+              <li>
+                <code>#####</code> Experiment
+              </li>
+            </ul>
+            <p className="mb-1">Optional status tags go at the end of a heading:</p>
+            <ul className="list-disc pl-5 space-y-1 mb-3">
+              <li>
+                <code>@next</code> (planned)
+              </li>
+              <li>
+                <code>@on-track</code> (in progress and healthy)
+              </li>
+              <li>
+                <code>@at-risk</code> (blocked or uncertain)
+              </li>
+              <li>
+                <code>@done</code> (completed)
+              </li>
+            </ul>
+            <p className="mb-1">Outcome cards can include metrics as bullet lines:</p>
+            <ul className="list-disc pl-5 space-y-1 mb-3">
+              <li>
+                <code>- start:</code> (baseline)
+              </li>
+              <li>
+                <code>- current:</code> (latest value)
+              </li>
+              <li>
+                <code>- target:</code> (goal)
+              </li>
+            </ul>
+            {/*<pre className="rounded-md border bg-background p-3 text-xs whitespace-pre-wrap">*/}
+            {/*  <code>{SYNTAX_EXAMPLE}</code>*/}
+            {/*</pre>*/}
+          </aside>
         </div>
         <DialogFooter className="flex-row justify-between sm:justify-between">
           <Button variant="outline" size="sm" onClick={handleCopyMarkdown} className="gap-2">

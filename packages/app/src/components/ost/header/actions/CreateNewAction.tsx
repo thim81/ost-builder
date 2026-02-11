@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { CirclePlus } from 'lucide-react';
+import { nanoid } from 'nanoid';
 import { Button } from '@/components/ui/button';
 import { useOSTStore } from '@/store/ostStore';
 import { OST_EXAMPLES } from '@ost-builder/shared';
+import { setActiveLocalSnapshotSourceKey, upsertLocalSnapshotBySource } from '@/lib/localSnapshots';
 import {
   Dialog,
   DialogContent,
@@ -15,6 +17,18 @@ import {
 export function CreateNewAction() {
   const { createNewTree } = useOSTStore();
   const [createOpen, setCreateOpen] = useState(false);
+
+  const createAndSave = (markdown: string, name: string) => {
+    createNewTree(markdown, name);
+    const sourceKey = `create-new:${nanoid(10)}`;
+    upsertLocalSnapshotBySource(sourceKey, 'create-new', {
+      name,
+      markdown,
+      collapsedIds: [],
+    });
+    setActiveLocalSnapshotSourceKey(sourceKey);
+    setCreateOpen(false);
+  };
 
   return (
     <Dialog open={createOpen} onOpenChange={setCreateOpen}>
@@ -38,11 +52,7 @@ export function CreateNewAction() {
               <button
                 type="button"
                 onClick={() => {
-                  createNewTree(
-                    '# My Opportunity Solution Tree\n\n',
-                    'My Opportunity Solution Tree',
-                  );
-                  setCreateOpen(false);
+                  createAndSave('# My Opportunity Solution Tree\n\n', 'My Opportunity Solution Tree');
                 }}
                 className="rounded-lg border border-border bg-background p-4 text-left transition-shadow hover:shadow-sm"
               >
@@ -77,8 +87,7 @@ Add the opportunity statement
 #### [Solution] A simple first solution @next
 Add a small experimentable solution
 `;
-                  createNewTree(minimal, 'My Opportunity Solution Tree');
-                  setCreateOpen(false);
+                  createAndSave(minimal, 'My Opportunity Solution Tree');
                 }}
                 className="rounded-lg border border-border bg-background p-4 text-left transition-shadow hover:shadow-sm"
               >
@@ -107,8 +116,7 @@ Add a small experimentable solution
                   key={example.id}
                   type="button"
                   onClick={() => {
-                    createNewTree(example.markdown, example.name);
-                    setCreateOpen(false);
+                    createAndSave(example.markdown, example.name);
                   }}
                   className="rounded-md border border-border px-3 py-2 text-left hover:bg-muted transition-colors"
                 >

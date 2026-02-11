@@ -2,13 +2,13 @@ import { TreeDeciduous } from 'lucide-react';
 import { ProjectName } from './header/ProjectName';
 import { MarkdownEditorAction } from './header/actions/MarkdownEditorAction';
 import { UploadAction } from './header/actions/UploadAction';
+import { LibraryAction } from './header/actions/LibraryAction';
 import { CreateNewAction } from './header/actions/CreateNewAction';
 import { ResetAction } from './header/actions/ResetAction';
-import { ExportAction } from './header/actions/ExportAction';
-import { LayoutToggleAction } from './header/actions/LayoutToggleAction';
 import { ShareAction } from './header/actions/ShareAction';
-import { SettingsAction } from './header/actions/SettingsAction';
+import { CloudShareAction } from './header/actions/CloudShareAction';
 import { GitHubLinkAction } from './header/actions/GitHubLinkAction';
+import { AccountMenuAction } from './header/actions/AccountMenuAction';
 
 export function Header() {
   return (
@@ -25,11 +25,13 @@ export function Header() {
         <CreateNewAction />
         <UploadAction />
         <ResetAction />
-        <LayoutToggleAction />
-        <ExportAction />
         <ShareAction />
+        <CloudShareAction />
+        <div className="w-px h-6 bg-border" />
+        <LibraryAction />
+        <div className="w-px h-6 bg-border" />
         <GitHubLinkAction />
-        <SettingsAction />
+        <AccountMenuAction />
       </div>
     </header>
   );
