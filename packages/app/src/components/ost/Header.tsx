@@ -9,6 +9,7 @@ import { LayoutToggleAction } from './header/actions/LayoutToggleAction';
 import { ShareAction } from './header/actions/ShareAction';
 import { SettingsAction } from './header/actions/SettingsAction';
 import { GitHubLinkAction } from './header/actions/GitHubLinkAction';
+import { AccountMenuAction } from './header/actions/AccountMenuAction';
 
 export function Header() {
   return (
@@ -30,6 +31,7 @@ export function Header() {
         <ShareAction />
         <GitHubLinkAction />
         <SettingsAction />
+        <AccountMenuAction />
       </div>
     </header>
   );
