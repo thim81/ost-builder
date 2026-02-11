@@ -115,7 +115,7 @@ export default function Library() {
       item.collapsedIds || [],
     );
     const link = `${window.location.origin}/#${fragment}`;
-    await handleCopy(link, 'Local share link copied.');
+    await handleCopy(link, 'Share link copied.');
   };
 
   const openLocalSnapshot = (item: LocalSnapshot) => {

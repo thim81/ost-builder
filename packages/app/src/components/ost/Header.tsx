@@ -6,6 +6,7 @@ import { LibraryAction } from './header/actions/LibraryAction';
 import { CreateNewAction } from './header/actions/CreateNewAction';
 import { ResetAction } from './header/actions/ResetAction';
 import { ShareAction } from './header/actions/ShareAction';
+import { CloudShareAction } from './header/actions/CloudShareAction';
 import { GitHubLinkAction } from './header/actions/GitHubLinkAction';
 import { AccountMenuAction } from './header/actions/AccountMenuAction';
 
@@ -25,6 +26,7 @@ export function Header() {
         <UploadAction />
         <ResetAction />
         <ShareAction />
+        <CloudShareAction />
         <div className="w-px h-6 bg-border" />
         <LibraryAction />
         <div className="w-px h-6 bg-border" />

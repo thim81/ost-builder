@@ -200,7 +200,7 @@ export function Canvas() {
         data-ost-export-exclude
         onClick={(e) => e.stopPropagation()}
       >
-        <ExportAction compact />
+        <ExportAction />
         <div className="w-px h-6 bg-border" />
         <LayoutToggleAction compact />
         <div className="w-px h-6 bg-border" />
