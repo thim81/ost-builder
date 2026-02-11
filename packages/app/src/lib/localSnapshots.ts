@@ -20,6 +20,8 @@ export type LocalSnapshot = {
   collapsedIds?: string[];
   sourceType?: SnapshotSourceType;
   sourceKey?: string;
+  cloudShareId?: string;
+  syncedAt?: number;
   payloadHash?: string;
   createdAt: number;
   updatedAt: number;
@@ -170,7 +172,20 @@ export function upsertShareSnapshot(
 
 export function updateLocalSnapshot(
   id: string,
-  updates: Partial<Pick<LocalSnapshot, 'name' | 'markdown' | 'settings' | 'collapsedIds'>>,
+  updates: Partial<
+    Pick<
+      LocalSnapshot,
+      | 'name'
+      | 'markdown'
+      | 'settings'
+      | 'collapsedIds'
+      | 'cloudShareId'
+      | 'syncedAt'
+      | 'sourceType'
+      | 'sourceKey'
+      | 'lastOpenedAt'
+    >
+  >,
 ): LocalSnapshot | null {
   const current = readRaw();
   const index = current.findIndex((item) => item.id === id);

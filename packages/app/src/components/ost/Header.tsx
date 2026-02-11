@@ -5,7 +5,6 @@ import { UploadAction } from './header/actions/UploadAction';
 import { LibraryAction } from './header/actions/LibraryAction';
 import { CreateNewAction } from './header/actions/CreateNewAction';
 import { ResetAction } from './header/actions/ResetAction';
-import { ExportAction } from './header/actions/ExportAction';
 import { ShareAction } from './header/actions/ShareAction';
 import { GitHubLinkAction } from './header/actions/GitHubLinkAction';
 import { AccountMenuAction } from './header/actions/AccountMenuAction';
@@ -22,12 +21,13 @@ export function Header() {
 
       <div className="flex items-center gap-2">
         <MarkdownEditorAction />
-        <LibraryAction />
         <CreateNewAction />
         <UploadAction />
         <ResetAction />
-        <ExportAction />
         <ShareAction />
+        <div className="w-px h-6 bg-border" />
+        <LibraryAction />
+        <div className="w-px h-6 bg-border" />
         <GitHubLinkAction />
         <AccountMenuAction />
       </div>

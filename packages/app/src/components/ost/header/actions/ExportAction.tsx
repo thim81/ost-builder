@@ -21,7 +21,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-export function ExportAction() {
+type ExportActionProps = {
+  compact?: boolean;
+};
+
+export function ExportAction({ compact = false }: ExportActionProps = {}) {
   const { canvasState, projectName } = useOSTStore();
   const [exportOpen, setExportOpen] = useState(false);
   const [exportBackground, setExportBackground] = useState<'grid' | 'transparent'>('grid');
@@ -59,9 +63,14 @@ export function ExportAction() {
   return (
     <Dialog open={exportOpen} onOpenChange={setExportOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-2">
+        <Button
+          variant="ghost"
+          size={compact ? 'icon' : 'sm'}
+          className={compact ? 'h-8 w-8' : 'gap-2'}
+          title="Export PNG"
+        >
           <Download className="w-4 h-4" />
-          <span className="hidden sm:inline">Export PNG</span>
+          {!compact ? <span className="hidden sm:inline">Export PNG</span> : null}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md">
