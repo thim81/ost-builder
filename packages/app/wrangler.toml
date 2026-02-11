@@ -2,3 +2,12 @@ name = "ost-builder"
 compatibility_date = "2026-02-03"
 compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = "./dist"
+
+[[kv_namespaces]]
+binding = "SHARE_KV"
+id = "59e571bf6ca04483aedcb1278fb5ed11"
+
+[[d1_databases]]
+binding = "SHARE_DB"
+database_name = "ost-builder"
+database_id = "087a7178-92de-4f1f-b9f9-7ab3cc35d8d1"

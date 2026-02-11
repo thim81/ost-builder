@@ -6,14 +6,188 @@ function buildSpec(requestUrl: string) {
     openapi: '3.1.0',
     info: {
       title: 'OST Builder Share API',
-      version: '1.0.0',
-      description: 'Create shareable OST links from Markdown or OST JSON payloads.',
+      version: '2.0.0',
+      description:
+        'Create local fragment share links or opt in to account-backed Cloudflare-stored links with TTL and ownership controls.',
     },
     servers: [{ url: origin }],
     paths: {
+      '/api/auth/login': {
+        get: {
+          summary: 'Start OAuth login flow',
+          parameters: [
+            {
+              name: 'provider',
+              in: 'query',
+              required: true,
+              schema: { type: 'string', enum: ['github', 'google'] },
+            },
+            {
+              name: 'returnTo',
+              in: 'query',
+              schema: { type: 'string' },
+            },
+          ],
+          responses: {
+            '302': { description: 'Redirect to OAuth provider' },
+          },
+        },
+      },
+      '/api/auth/callback': {
+        get: {
+          summary: 'OAuth callback endpoint',
+          responses: {
+            '302': { description: 'Session established and redirected' },
+          },
+        },
+      },
+      '/api/auth/me': {
+        get: {
+          summary: 'Get current session user',
+          responses: {
+            '200': {
+              description: 'Session info',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      featureEnabled: { type: 'boolean' },
+                      user: {
+                        type: ['object', 'null'],
+                        properties: {
+                          sub: { type: 'string' },
+                          provider: { type: 'string', enum: ['github', 'google'] },
+                          name: { type: 'string' },
+                          email: { type: 'string' },
+                          avatarUrl: { type: 'string' },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      '/api/auth/logout': {
+        post: {
+          summary: 'Clear current session',
+          responses: {
+            '200': { description: 'Logged out' },
+          },
+        },
+      },
+      '/api/share/store': {
+        post: {
+          summary: 'Create account-backed stored share',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    markdown: { type: 'string' },
+                    name: { type: 'string' },
+                    visibility: { type: 'string', enum: ['public', 'private'] },
+                    ttlDays: { type: 'integer', enum: [1, 7, 30, 90] },
+                    settings: { type: 'object' },
+                    collapsedIds: {
+                      type: 'array',
+                      items: { type: 'string' },
+                    },
+                  },
+                  required: ['markdown', 'visibility', 'ttlDays'],
+                },
+              },
+            },
+          },
+          responses: {
+            '200': { description: 'Stored share created' },
+            '401': { description: 'Authentication required' },
+          },
+        },
+        get: {
+          summary: 'List owner shares',
+          responses: {
+            '200': { description: 'Owner shares list' },
+            '401': { description: 'Authentication required' },
+          },
+        },
+      },
+      '/api/share/store/{id}': {
+        get: {
+          summary: 'Get stored share content by ID',
+          parameters: [
+            {
+              name: 'id',
+              in: 'path',
+              required: true,
+              schema: { type: 'string' },
+            },
+          ],
+          responses: {
+            '200': { description: 'Stored share payload' },
+            '401': { description: 'Private share requires owner auth' },
+            '404': { description: 'Not found / expired / deleted' },
+          },
+        },
+        patch: {
+          summary: 'Update stored share content or visibility',
+          parameters: [
+            {
+              name: 'id',
+              in: 'path',
+              required: true,
+              schema: { type: 'string' },
+            },
+          ],
+          responses: {
+            '200': { description: 'Share updated' },
+            '401': { description: 'Authentication required' },
+            '403': { description: 'Not owner' },
+          },
+        },
+        delete: {
+          summary: 'Delete stored share permanently',
+          parameters: [
+            {
+              name: 'id',
+              in: 'path',
+              required: true,
+              schema: { type: 'string' },
+            },
+          ],
+          responses: {
+            '200': { description: 'Deleted' },
+            '401': { description: 'Authentication required' },
+            '403': { description: 'Not owner' },
+          },
+        },
+      },
+      '/api/share/store/{id}/extend': {
+        post: {
+          summary: 'Extend stored share TTL from now',
+          parameters: [
+            {
+              name: 'id',
+              in: 'path',
+              required: true,
+              schema: { type: 'string' },
+            },
+          ],
+          responses: {
+            '200': { description: 'TTL extended' },
+            '401': { description: 'Authentication required' },
+            '403': { description: 'Not owner' },
+          },
+        },
+      },
       '/api/share/markdown': {
         post: {
-          summary: 'Create a share link from Markdown',
+          summary: 'Create a local hash-fragment share link from Markdown',
           requestBody: {
             required: true,
             content: {
@@ -31,48 +205,18 @@ function buildSpec(requestUrl: string) {
               'text/plain': {
                 schema: { type: 'string' },
               },
-              'text/markdown': {
-                schema: { type: 'string' },
-              },
             },
           },
-          parameters: [
-            {
-              name: 'name',
-              in: 'query',
-              schema: { type: 'string' },
-              description: 'Optional project name when sending raw text.',
-            },
-            {
-              name: 'baseUrl',
-              in: 'query',
-              schema: { type: 'string' },
-              description: 'Override base URL used in share link.',
-            },
-          ],
           responses: {
             '200': {
-              description: 'Share link created',
-              content: {
-                'application/json': {
-                  schema: {
-                    type: 'object',
-                    properties: {
-                      link: { type: 'string' },
-                      fragment: { type: 'string' },
-                      name: { type: ['string', 'null'] },
-                    },
-                  },
-                },
-              },
+              description: 'Hash-fragment share link created',
             },
-            '400': { description: 'Missing markdown content' },
           },
         },
       },
       '/api/share/json': {
         post: {
-          summary: 'Create a share link from OST JSON',
+          summary: 'Create a local hash-fragment share link from OST JSON',
           requestBody: {
             required: true,
             content: {
@@ -91,21 +235,8 @@ function buildSpec(requestUrl: string) {
           },
           responses: {
             '200': {
-              description: 'Share link created',
-              content: {
-                'application/json': {
-                  schema: {
-                    type: 'object',
-                    properties: {
-                      link: { type: 'string' },
-                      fragment: { type: 'string' },
-                      name: { type: ['string', 'null'] },
-                    },
-                  },
-                },
-              },
+              description: 'Hash-fragment share link created',
             },
-            '400': { description: 'Missing OST tree data' },
           },
         },
       },

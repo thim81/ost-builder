@@ -16,6 +16,7 @@ import {
   encodeMarkdownToUrlFragment,
   decodeMarkdownFromUrlFragment,
 } from '@ost-builder/shared';
+import type { ShareSettings } from '@ost-builder/shared';
 
 interface OSTStore {
   // Markdown is the source of truth
@@ -64,7 +65,19 @@ interface OSTStore {
   getMarkdown: () => string;
   setMarkdown: (markdown: string) => void;
   getShareLink: () => string;
+  getSharePayload: () => {
+    markdown: string;
+    name: string;
+    settings: ShareSettings;
+    collapsedIds: string[];
+  };
   loadFromShareLink: (urlOrFragment: string) => boolean;
+  loadFromStoredShare: (input: {
+    markdown: string;
+    name?: string;
+    settings?: ShareSettings;
+    collapsedIds?: string[];
+  }) => void;
 }
 
 const defaultMarkdown = createDefaultMarkdown();
@@ -465,6 +478,16 @@ export const useOSTStore = create<OSTStore>()(
 
         return `#${fragment}`;
       },
+      getSharePayload: () => ({
+        markdown: get().markdown,
+        name: get().projectName,
+        settings: {
+          layoutDirection: get().layoutDirection,
+          experimentLayout: get().experimentLayout,
+          viewDensity: get().viewDensity,
+        },
+        collapsedIds: get().collapsedCardIds,
+      }),
 
       loadFromShareLink: (urlOrFragment: string) => {
         const fragment = (() => {
@@ -501,6 +524,28 @@ export const useOSTStore = create<OSTStore>()(
         });
 
         return true;
+      },
+      loadFromStoredShare: (input) => {
+        const rawMarkdown = input.markdown || '';
+        const nextName = input.name || defaultProjectName;
+        const nextMarkdown = applyProjectNameToMarkdown(rawMarkdown, nextName);
+        const nextTree = parseMarkdownToTree(nextMarkdown);
+        const nextLayoutDirection = input.settings?.layoutDirection;
+        const nextExperimentLayout = input.settings?.experimentLayout;
+        const nextViewDensity = input.settings?.viewDensity;
+        const nextCollapsedIds = input.collapsedIds ?? [];
+
+        set({
+          markdown: nextMarkdown,
+          tree: nextTree,
+          projectName: nextName,
+          layoutDirection: nextLayoutDirection ?? get().layoutDirection,
+          experimentLayout: nextExperimentLayout ?? get().experimentLayout,
+          viewDensity: nextViewDensity ?? get().viewDensity,
+          collapsedCardIds: nextCollapsedIds,
+          selectedCardId: null,
+          editingCardId: null,
+        });
       },
 
       setMarkdown: (markdown: string) => {
