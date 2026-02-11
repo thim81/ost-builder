@@ -23,7 +23,7 @@ Outcome metrics (only for outcomes):
 - `- target: <number>`
 
 ## Visualize In The Web App
-To visualize an OST, open `https://ost-builder.pages.dev/` and either:
+To visualize an OST, open `https://ost-builder.trinixlabs.dev/` and either:
 - Paste your Markdown directly into the Markdown editor, or
 - Upload your Markdown file if the upload option is available in the UI.
 - Use the CLI to generate a share link and open the app:
