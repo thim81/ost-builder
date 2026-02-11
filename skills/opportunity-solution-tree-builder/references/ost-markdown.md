@@ -54,7 +54,7 @@ Test variants of motivational copy in onboarding
 - Child cards are nested by heading level.
 
 ## Visualizing In The Web App
-Open `https://ost-builder.pages.dev/` to preview or edit your tree visually.
+Open `https://ost-builder.trinixlabs.dev/` to preview or edit your tree visually.
 
 Ways to load your Markdown:
 - Paste the Markdown into the editor.
