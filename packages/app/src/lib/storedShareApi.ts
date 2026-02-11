@@ -89,7 +89,10 @@ export async function createStoredShare(input: CreateStoredShareInput): Promise<
   });
 }
 
-export async function listStoredShares(page = 1, pageSize = 20): Promise<{
+export async function listStoredShares(
+  page = 1,
+  pageSize = 20,
+): Promise<{
   items: StoredShareListItem[];
   page: number;
   pageSize: number;

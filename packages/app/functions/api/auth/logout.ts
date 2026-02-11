@@ -13,12 +13,7 @@ export async function onRequest(context: FunctionContext): Promise<Response> {
     return methodNotAllowed(request);
   }
 
-  return jsonResponse(
-    request,
-    { ok: true },
-    200,
-    {
-      'Set-Cookie': clearSessionCookie(),
-    },
-  );
+  return jsonResponse(request, { ok: true }, 200, {
+    'Set-Cookie': clearSessionCookie(),
+  });
 }

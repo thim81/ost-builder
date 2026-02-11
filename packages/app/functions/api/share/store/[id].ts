@@ -14,7 +14,12 @@ import {
   updateShareVisibility,
   validateMarkdown,
 } from '../../../_storedShare';
-import { isStoredShareEnabled, type FunctionContext } from '../../../_env';
+import {
+  assertAuthEnv,
+  assertStorageEnv,
+  isStoredShareEnabled,
+  type FunctionContext,
+} from '../../../_env';
 import type { ShareSettings } from '@ost-builder/shared';
 
 type PatchBody = {
@@ -39,6 +44,14 @@ export async function onRequest(context: FunctionContext<{ id: string }>): Promi
 
   if (!isStoredShareEnabled(env)) {
     return jsonResponse(request, { error: 'Stored share feature is disabled' }, 404);
+  }
+
+  try {
+    assertAuthEnv(env);
+    assertStorageEnv(env);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Environment misconfigured';
+    return jsonResponse(request, { error: message }, 500);
   }
 
   await ensureShareTable(env);

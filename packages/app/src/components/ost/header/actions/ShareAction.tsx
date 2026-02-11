@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Check, ExternalLink, Loader2, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useOSTStore } from '@/store/ostStore';
@@ -26,6 +26,7 @@ import { createStoredShare, getAuthMe } from '@/lib/storedShareApi';
 type ShareMode = 'local' | 'cloud';
 type Visibility = 'public' | 'private';
 type TtlDays = 1 | 7 | 30 | 90;
+const CLOUD_SHARE_UI_TOGGLE_KEY = 'ost:feature:cloud-share';
 
 export function ShareAction() {
   const { getShareLink, getSharePayload } = useOSTStore();
@@ -38,15 +39,25 @@ export function ShareAction() {
   const [submitting, setSubmitting] = useState(false);
   const [copied, setCopied] = useState(false);
   const [featureEnabled, setFeatureEnabled] = useState(true);
+  const [cloudShareUiEnabled, setCloudShareUiEnabled] = useState(false);
   const [user, setUser] = useState<{ name?: string; provider: 'github' } | null>(null);
-  const [created, setCreated] = useState<{ link: string; expiresAt: number; visibility: Visibility } | null>(
-    null,
-  );
+  const [created, setCreated] = useState<{
+    link: string;
+    expiresAt: number;
+    visibility: Visibility;
+  } | null>(null);
 
   const expiresLabel = useMemo(() => {
     if (!created?.expiresAt) return '';
     return new Date(created.expiresAt).toLocaleString();
   }, [created?.expiresAt]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const raw = (window.localStorage.getItem(CLOUD_SHARE_UI_TOGGLE_KEY) || '').toLowerCase();
+    const enabled = raw === '1' || raw === 'true' || raw === 'enabled' || raw === 'on';
+    setCloudShareUiEnabled(enabled);
+  }, []);
 
   const loadAuth = async () => {
     setLoadingAuth(true);
@@ -76,7 +87,9 @@ export function ShareAction() {
       setCopied(false);
       return;
     }
-    void loadAuth();
+    if (cloudShareUiEnabled) {
+      void loadAuth();
+    }
   };
 
   const handleLocalShare = async () => {
@@ -147,11 +160,13 @@ export function ShareAction() {
         <DialogHeader>
           <DialogTitle>Share Opportunity Tree</DialogTitle>
           <DialogDescription>
-            Choose local sharing (browser-only) or optional OST-Builder storage with expiry.
+            {cloudShareUiEnabled
+              ? 'Choose local sharing (browser-only) or optional OST-Builder storage with expiry.'
+              : 'Share locally with browser-only URL fragments.'}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className={`grid gap-3 ${cloudShareUiEnabled ? 'sm:grid-cols-2' : 'sm:grid-cols-1'}`}>
           <button
             type="button"
             onClick={() => setMode('local')}
@@ -162,16 +177,20 @@ export function ShareAction() {
             <div className="text-sm font-medium">Share locally</div>
             <div className="text-xs text-muted-foreground mt-1">Data stays in URL/browser.</div>
           </button>
-          <button
-            type="button"
-            onClick={() => setMode('cloud')}
-            className={`rounded-md border p-3 text-left transition ${
-              mode === 'cloud' ? 'border-primary bg-primary/5' : 'border-border bg-muted/30'
-            }`}
-          >
-            <div className="text-sm font-medium">Save in your Account</div>
-            <div className="text-xs text-muted-foreground mt-1">Short link, TTL, access controls.</div>
-          </button>
+          {cloudShareUiEnabled && (
+            <button
+              type="button"
+              onClick={() => setMode('cloud')}
+              className={`rounded-md border p-3 text-left transition ${
+                mode === 'cloud' ? 'border-primary bg-primary/5' : 'border-border bg-muted/30'
+              }`}
+            >
+              <div className="text-sm font-medium">Save in your Account</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Short link, TTL, access controls.
+              </div>
+            </button>
+          )}
         </div>
 
         {mode === 'local' && (
@@ -228,7 +247,10 @@ export function ShareAction() {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <label className="text-sm font-medium">Visibility</label>
-                      <Select value={visibility} onValueChange={(value) => setVisibility(value as Visibility)}>
+                      <Select
+                        value={visibility}
+                        onValueChange={(value) => setVisibility(value as Visibility)}
+                      >
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -240,7 +262,10 @@ export function ShareAction() {
                     </div>
                     <div className="space-y-1">
                       <label className="text-sm font-medium">TTL</label>
-                      <Select value={String(ttlDays)} onValueChange={(value) => setTtlDays(Number(value) as TtlDays)}>
+                      <Select
+                        value={String(ttlDays)}
+                        onValueChange={(value) => setTtlDays(Number(value) as TtlDays)}
+                      >
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -269,10 +294,17 @@ export function ShareAction() {
                         <Button variant="outline" onClick={handleCopyCreatedLink}>
                           Copy
                         </Button>
-                        <Button variant="outline" onClick={() => window.open(created.link, '_blank')}>
-                          <ExternalLink className="w-4 h-4 mr-2" />Open
+                        <Button
+                          variant="outline"
+                          onClick={() => window.open(created.link, '_blank')}
+                        >
+                          <ExternalLink className="w-4 h-4 mr-2" />
+                          Open
                         </Button>
-                        <Button variant="outline" onClick={() => (window.location.href = '/shares')}>
+                        <Button
+                          variant="outline"
+                          onClick={() => (window.location.href = '/shares')}
+                        >
                           Manage shares
                         </Button>
                       </div>

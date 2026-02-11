@@ -165,12 +165,16 @@ export default function MyShares() {
           <div className="flex gap-2">
             <Button
               variant="outline"
-              onClick={() => (window.location.href = '/api/auth/login?provider=github&returnTo=/shares')}
+              onClick={() =>
+                (window.location.href = '/api/auth/login?provider=github&returnTo=/shares')
+              }
             >
               Continue with GitHub
             </Button>
           </div>
-          <Button variant="ghost" onClick={() => navigate('/')}>Back to builder</Button>
+          <Button variant="ghost" onClick={() => navigate('/')}>
+            Back to builder
+          </Button>
         </div>
       </div>
     );
@@ -181,7 +185,9 @@ export default function MyShares() {
       <div className="max-w-5xl mx-auto space-y-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold">My Shares</h1>
-          <Button variant="outline" onClick={() => navigate('/')}>Back to builder</Button>
+          <Button variant="outline" onClick={() => navigate('/')}>
+            Back to builder
+          </Button>
         </div>
 
         {items.length === 0 ? (
@@ -194,8 +200,12 @@ export default function MyShares() {
               <div key={item.id} className="rounded-md border border-border bg-card p-4 space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <div className="font-medium">{item.name || `Share ${item.id}`}</div>
-                  <Badge variant="secondary" className="capitalize">{item.visibility}</Badge>
-                  <Badge variant="outline" className="capitalize">{item.status}</Badge>
+                  <Badge variant="secondary" className="capitalize">
+                    {item.visibility}
+                  </Badge>
+                  <Badge variant="outline" className="capitalize">
+                    {item.status}
+                  </Badge>
                 </div>
 
                 <div className="text-xs text-muted-foreground break-all">{item.link}</div>
@@ -206,7 +216,9 @@ export default function MyShares() {
                 {editingId === item.id ? (
                   <div className="flex gap-2">
                     <Input value={nameDraft} onChange={(e) => setNameDraft(e.target.value)} />
-                    <Button size="sm" onClick={() => saveRename(item.id)}>Save</Button>
+                    <Button size="sm" onClick={() => saveRename(item.id)}>
+                      Save
+                    </Button>
                     <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>
                       Cancel
                     </Button>
@@ -219,7 +231,9 @@ export default function MyShares() {
                       className="font-mono min-h-48"
                     />
                     <div className="flex gap-2">
-                      <Button size="sm" onClick={() => saveContent(item.id)}>Save content</Button>
+                      <Button size="sm" onClick={() => saveContent(item.id)}>
+                        Save content
+                      </Button>
                       <Button
                         size="sm"
                         variant="outline"
@@ -234,10 +248,18 @@ export default function MyShares() {
                   </div>
                 ) : (
                   <div className="flex flex-wrap gap-2">
-                    <Button size="sm" variant="outline" onClick={() => navigator.clipboard.writeText(item.link)}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => navigator.clipboard.writeText(item.link)}
+                    >
                       Copy
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => window.open(item.link, '_blank')}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => window.open(item.link, '_blank')}
+                    >
                       Open
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => beginRename(item)}>

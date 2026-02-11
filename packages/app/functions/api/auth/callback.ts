@@ -6,7 +6,7 @@ import {
   redirectResponse,
   validateOAuthState,
 } from '../../_auth';
-import { assertRequiredEnv, isStoredShareEnabled, type FunctionContext } from '../../_env';
+import { assertAuthEnv, isStoredShareEnabled, type FunctionContext } from '../../_env';
 
 export async function onRequest(context: FunctionContext): Promise<Response> {
   const { request, env } = context;
@@ -19,7 +19,12 @@ export async function onRequest(context: FunctionContext): Promise<Response> {
     return jsonError(404, 'Stored share feature is disabled');
   }
 
-  assertRequiredEnv(env);
+  try {
+    assertAuthEnv(env);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Auth environment misconfigured';
+    return jsonError(500, message);
+  }
 
   const url = new URL(request.url);
   const state = url.searchParams.get('state');

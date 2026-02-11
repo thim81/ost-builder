@@ -116,7 +116,10 @@ export function clearSessionCookie(): string {
   });
 }
 
-export async function getSessionUser(request: Request, secret: string): Promise<SessionUser | null> {
+export async function getSessionUser(
+  request: Request,
+  secret: string,
+): Promise<SessionUser | null> {
   const token = getCookie(request, SESSION_COOKIE);
   if (!token) return null;
   const [encoded, signature] = token.split('.');
@@ -143,7 +146,11 @@ export async function getSessionUser(request: Request, secret: string): Promise<
   };
 }
 
-export function jsonError(status: number, error: string, details?: Record<string, unknown>): Response {
+export function jsonError(
+  status: number,
+  error: string,
+  details?: Record<string, unknown>,
+): Response {
   return new Response(JSON.stringify({ error, ...details }), {
     status,
     headers: {
@@ -156,7 +163,11 @@ export function originFromRequest(request: Request): string {
   return new URL(request.url).origin;
 }
 
-export function buildLoginUrl(request: Request, provider: OAuthProvider, returnTo?: string): string {
+export function buildLoginUrl(
+  request: Request,
+  provider: OAuthProvider,
+  returnTo?: string,
+): string {
   const url = new URL('/api/auth/login', originFromRequest(request));
   url.searchParams.set('provider', provider);
   if (returnTo) url.searchParams.set('returnTo', normalizeReturnTo(returnTo));
@@ -273,9 +284,10 @@ export async function exchangeCodeForUser(
     }),
   });
 
-  const tokenData = (await tokenRes.json().catch(() => null)) as
-    | { access_token?: string; error?: string }
-    | null;
+  const tokenData = (await tokenRes.json().catch(() => null)) as {
+    access_token?: string;
+    error?: string;
+  } | null;
 
   if (!tokenRes.ok || !tokenData?.access_token) {
     throw new Error(tokenData?.error || 'GitHub token exchange failed');
@@ -289,9 +301,13 @@ export async function exchangeCodeForUser(
     },
   });
 
-  const profile = (await userRes.json().catch(() => null)) as
-    | { id?: number; login?: string; name?: string; avatar_url?: string; email?: string }
-    | null;
+  const profile = (await userRes.json().catch(() => null)) as {
+    id?: number;
+    login?: string;
+    name?: string;
+    avatar_url?: string;
+    email?: string;
+  } | null;
 
   if (!userRes.ok || !profile?.id) {
     throw new Error('GitHub profile fetch failed');

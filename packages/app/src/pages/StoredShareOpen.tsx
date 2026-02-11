@@ -77,8 +77,7 @@ export default function StoredShareOpen() {
               <Button
                 variant="outline"
                 onClick={() =>
-                  (window.location.href =
-                    `/api/auth/login?provider=github&returnTo=${encodeURIComponent(`/s/${id}`)}`)
+                  (window.location.href = `/api/auth/login?provider=github&returnTo=${encodeURIComponent(`/s/${id}`)}`)
                 }
               >
                 Continue with GitHub

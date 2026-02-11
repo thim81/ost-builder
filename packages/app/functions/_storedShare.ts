@@ -64,7 +64,8 @@ export function statusFromShare(row: ShareRow): 'active' | 'expired' | 'deleted'
 }
 
 export async function ensureShareTable(env: EnvBindings): Promise<void> {
-  await env.SHARE_DB.prepare(`
+  await env.SHARE_DB.prepare(
+    `
     CREATE TABLE IF NOT EXISTS shares (
       id TEXT PRIMARY KEY,
       owner_sub TEXT NOT NULL,
@@ -77,7 +78,8 @@ export async function ensureShareTable(env: EnvBindings): Promise<void> {
       expires_at INTEGER NOT NULL,
       deleted_at INTEGER
     )
-  `).run();
+  `,
+  ).run();
 
   await env.SHARE_DB.prepare(
     'CREATE INDEX IF NOT EXISTS idx_shares_owner_updated ON shares(owner_sub, updated_at DESC)',
