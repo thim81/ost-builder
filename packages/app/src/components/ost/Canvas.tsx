@@ -14,6 +14,8 @@ import { useOSTStore } from '@/store/ostStore';
 import { TreeNode } from './TreeNode';
 import { OSTCard } from './OSTCard';
 import { AddCardButton } from './AddCardButton';
+import { LayoutToggleAction } from './header/actions/LayoutToggleAction';
+import { SettingsAction } from './header/actions/SettingsAction';
 import { cn } from '@/lib/utils';
 import type { OSTCard as OSTCardType } from '@ost-builder/shared';
 import { Button } from '@/components/ui/button';
@@ -189,6 +191,17 @@ export function Canvas() {
         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleFitToScreen}>
           <Maximize2 className="w-4 h-4" />
         </Button>
+      </div>
+
+      {/* Canvas side controls */}
+      <div
+        className="absolute top-6 right-6 flex items-center gap-2 bg-card/90 backdrop-blur-sm border border-border rounded-lg p-1 shadow-lg z-50"
+        data-ost-export-exclude
+        onClick={(e) => e.stopPropagation()}
+      >
+        <LayoutToggleAction compact />
+        <div className="w-px h-6 bg-border" />
+        <SettingsAction />
       </div>
 
       {/* Canvas content */}

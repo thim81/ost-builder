@@ -2,12 +2,11 @@ import { TreeDeciduous } from 'lucide-react';
 import { ProjectName } from './header/ProjectName';
 import { MarkdownEditorAction } from './header/actions/MarkdownEditorAction';
 import { UploadAction } from './header/actions/UploadAction';
+import { LibraryAction } from './header/actions/LibraryAction';
 import { CreateNewAction } from './header/actions/CreateNewAction';
 import { ResetAction } from './header/actions/ResetAction';
 import { ExportAction } from './header/actions/ExportAction';
-import { LayoutToggleAction } from './header/actions/LayoutToggleAction';
 import { ShareAction } from './header/actions/ShareAction';
-import { SettingsAction } from './header/actions/SettingsAction';
 import { GitHubLinkAction } from './header/actions/GitHubLinkAction';
 import { AccountMenuAction } from './header/actions/AccountMenuAction';
 
@@ -23,14 +22,13 @@ export function Header() {
 
       <div className="flex items-center gap-2">
         <MarkdownEditorAction />
+        <LibraryAction />
         <CreateNewAction />
         <UploadAction />
         <ResetAction />
-        <LayoutToggleAction />
         <ExportAction />
         <ShareAction />
         <GitHubLinkAction />
-        <SettingsAction />
         <AccountMenuAction />
       </div>
     </header>
