@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { encodeMarkdownToUrlFragment } from '@ost-builder/shared';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import {
   deleteStoredShare,
@@ -14,35 +16,60 @@ import {
   type StoredShareListItem,
   updateStoredShare,
 } from '@/lib/storedShareApi';
+import {
+  deleteLocalSnapshot,
+  listLocalSnapshots,
+  updateLocalSnapshot,
+  type LocalSnapshot,
+} from '@/lib/localSnapshots';
 import { toast } from '@/components/ui/use-toast';
+import { useOSTStore } from '@/store/ostStore';
 
 const TTL_OPTIONS = [1, 7, 30, 90] as const;
 
+function statusLabel(status: StoredShareListItem['status']): string {
+  if (status === 'active') return 'available';
+  return status;
+}
+
+function localSourceLabel(sourceType?: LocalSnapshot['sourceType']): string {
+  if (sourceType === 'draft') return 'draft';
+  if (sourceType === 'share-cloud') return 'share-cloud';
+  if (sourceType === 'share-fragment') return 'share-fragment';
+  if (sourceType === 'create-new') return 'create-new';
+  return 'local';
+}
+
 export default function MyShares() {
   const navigate = useNavigate();
+  const { loadFromStoredShare } = useOSTStore();
   const [loading, setLoading] = useState(true);
-  const [authRequired, setAuthRequired] = useState(false);
-  const [items, setItems] = useState<StoredShareListItem[]>([]);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [cloudUser, setCloudUser] = useState<{ name?: string } | null>(null);
+  const [cloudItems, setCloudItems] = useState<StoredShareListItem[]>([]);
+  const [localItems, setLocalItems] = useState<LocalSnapshot[]>([]);
+  const [editingCloudId, setEditingCloudId] = useState<string | null>(null);
+  const [editingCloudContentId, setEditingCloudContentId] = useState<string | null>(null);
+  const [editingLocalId, setEditingLocalId] = useState<string | null>(null);
   const [nameDraft, setNameDraft] = useState('');
-  const [editingContentId, setEditingContentId] = useState<string | null>(null);
   const [contentDraft, setContentDraft] = useState('');
 
   const load = async () => {
     setLoading(true);
+    setLocalItems(listLocalSnapshots());
+
     try {
       const auth = await getAuthMe();
       if (!auth.user) {
-        setAuthRequired(true);
-        setItems([]);
-        return;
+        setCloudUser(null);
+        setCloudItems([]);
+      } else {
+        setCloudUser({ name: auth.user.name });
+        const data = await listStoredShares(1, 50);
+        setCloudItems(data.items);
       }
-      setAuthRequired(false);
-      const data = await listStoredShares(1, 50);
-      setItems(data.items);
     } catch {
-      setAuthRequired(true);
-      setItems([]);
+      setCloudUser(null);
+      setCloudItems([]);
     } finally {
       setLoading(false);
     }
@@ -51,6 +78,48 @@ export default function MyShares() {
   useEffect(() => {
     void load();
   }, []);
+
+  const handleCopy = async (text: string, description: string) => {
+    await navigator.clipboard.writeText(text);
+    toast({ title: 'Copied', description });
+  };
+
+  const copyLocalShareLink = async (item: LocalSnapshot) => {
+    const fragment = encodeMarkdownToUrlFragment(
+      item.markdown,
+      item.name,
+      item.settings,
+      item.collapsedIds || [],
+    );
+    const link = `${window.location.origin}/#${fragment}`;
+    await handleCopy(link, 'Local share link copied.');
+  };
+
+  const openLocalSnapshot = (item: LocalSnapshot) => {
+    loadFromStoredShare({
+      markdown: item.markdown,
+      name: item.name,
+      settings: item.settings,
+      collapsedIds: item.collapsedIds || [],
+    });
+    navigate('/');
+  };
+
+  const removeLocal = (id: string) => {
+    const confirmed = window.confirm('Delete this local snapshot?');
+    if (!confirmed) return;
+    deleteLocalSnapshot(id);
+    setLocalItems(listLocalSnapshots());
+    toast({ title: 'Deleted', description: 'Local snapshot removed.' });
+  };
+
+  const saveLocalRename = (id: string) => {
+    updateLocalSnapshot(id, { name: nameDraft });
+    setEditingLocalId(null);
+    setNameDraft('');
+    setLocalItems(listLocalSnapshots());
+    toast({ title: 'Saved', description: 'Local snapshot renamed.' });
+  };
 
   const toggleVisibility = async (item: StoredShareListItem) => {
     const next: ShareVisibility = item.visibility === 'public' ? 'private' : 'public';
@@ -81,8 +150,8 @@ export default function MyShares() {
     }
   };
 
-  const remove = async (id: string) => {
-    const confirmed = window.confirm('Delete this share permanently?');
+  const removeCloud = async (id: string) => {
+    const confirmed = window.confirm('Delete this cloud share permanently?');
     if (!confirmed) return;
     try {
       await deleteStoredShare(id);
@@ -97,15 +166,20 @@ export default function MyShares() {
     }
   };
 
-  const beginRename = (item: StoredShareListItem) => {
-    setEditingId(item.id);
+  const beginRenameCloud = (item: StoredShareListItem) => {
+    setEditingCloudId(item.id);
     setNameDraft(item.name || '');
   };
 
-  const beginEditContent = async (item: StoredShareListItem) => {
+  const beginRenameLocal = (item: LocalSnapshot) => {
+    setEditingLocalId(item.id);
+    setNameDraft(item.name || '');
+  };
+
+  const beginEditCloudContent = async (item: StoredShareListItem) => {
     try {
       const payload = await getStoredShare(item.id);
-      setEditingContentId(item.id);
+      setEditingCloudContentId(item.id);
       setContentDraft(payload.markdown);
     } catch (error) {
       toast({
@@ -116,10 +190,10 @@ export default function MyShares() {
     }
   };
 
-  const saveRename = async (id: string) => {
+  const saveCloudRename = async (id: string) => {
     try {
       await updateStoredShare(id, { name: nameDraft.trim() });
-      setEditingId(null);
+      setEditingCloudId(null);
       setNameDraft('');
       toast({ title: 'Saved', description: 'Share name updated.' });
       await load();
@@ -132,10 +206,10 @@ export default function MyShares() {
     }
   };
 
-  const saveContent = async (id: string) => {
+  const saveCloudContent = async (id: string) => {
     try {
       await updateStoredShare(id, { markdown: contentDraft });
-      setEditingContentId(null);
+      setEditingCloudContentId(null);
       setContentDraft('');
       toast({ title: 'Saved', description: 'Share content updated.' });
       await load();
@@ -156,140 +230,206 @@ export default function MyShares() {
     );
   }
 
-  if (authRequired) {
-    return (
-      <div className="min-h-screen bg-background p-6">
-        <div className="max-w-5xl mx-auto rounded-md border border-border bg-card p-6 space-y-3">
-          <h1 className="text-xl font-semibold">My Shares</h1>
-          <p className="text-sm text-muted-foreground">Sign in to manage your stored shares.</p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() =>
-                (window.location.href = '/api/auth/login?provider=github&returnTo=/shares')
-              }
-            >
-              Continue with GitHub
-            </Button>
-          </div>
-          <Button variant="ghost" onClick={() => navigate('/')}>
-            Back to builder
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-5xl mx-auto space-y-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">My Shares</h1>
+          <div>
+            <h1 className="text-2xl font-semibold">Saved Library</h1>
+            <p className="text-xs text-muted-foreground mt-1">
+              Status “available” means the cloud link is currently usable (not expired/deleted).
+            </p>
+          </div>
           <Button variant="outline" onClick={() => navigate('/')}>
             Back to builder
           </Button>
         </div>
 
-        {items.length === 0 ? (
-          <div className="rounded-md border border-border bg-card p-6 text-sm text-muted-foreground">
-            No stored shares yet.
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {items.map((item) => (
-              <div key={item.id} className="rounded-md border border-border bg-card p-4 space-y-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="font-medium">{item.name || `Share ${item.id}`}</div>
-                  <Badge variant="secondary" className="capitalize">
-                    {item.visibility}
-                  </Badge>
-                  <Badge variant="outline" className="capitalize">
-                    {item.status}
-                  </Badge>
-                </div>
+        <Tabs defaultValue="cloud" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="cloud">Cloud</TabsTrigger>
+            <TabsTrigger value="local">Local</TabsTrigger>
+          </TabsList>
 
-                <div className="text-xs text-muted-foreground break-all">{item.link}</div>
-                <div className="text-xs text-muted-foreground">
-                  Expires: {new Date(item.expiresAt).toLocaleString()}
-                </div>
-
-                {editingId === item.id ? (
-                  <div className="flex gap-2">
-                    <Input value={nameDraft} onChange={(e) => setNameDraft(e.target.value)} />
-                    <Button size="sm" onClick={() => saveRename(item.id)}>
-                      Save
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>
-                      Cancel
-                    </Button>
+          <TabsContent value="cloud" className="space-y-3">
+            {!cloudUser ? (
+              <div className="rounded-md border border-border bg-card p-6 space-y-3">
+                <p className="text-sm text-muted-foreground">Sign in to manage cloud shares.</p>
+                <Button
+                  variant="outline"
+                  onClick={() => (window.location.href = '/api/auth/login?provider=github&returnTo=/shares')}
+                >
+                  Continue with GitHub
+                </Button>
+              </div>
+            ) : cloudItems.length === 0 ? (
+              <div className="rounded-md border border-border bg-card p-6 text-sm text-muted-foreground">
+                No cloud shares yet.
+              </div>
+            ) : (
+              cloudItems.map((item) => (
+                <div key={item.id} className="rounded-md border border-border bg-card p-4 space-y-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="font-medium">{item.name || `Share ${item.id}`}</div>
+                    <Badge variant="secondary" className="capitalize">
+                      {item.visibility}
+                    </Badge>
+                    <Badge variant="outline" className="capitalize">
+                      {statusLabel(item.status)}
+                    </Badge>
                   </div>
-                ) : editingContentId === item.id ? (
-                  <div className="space-y-2">
-                    <Textarea
-                      value={contentDraft}
-                      onChange={(e) => setContentDraft(e.target.value)}
-                      className="font-mono min-h-48"
-                    />
+
+                  <div className="text-xs text-muted-foreground break-all">{item.link}</div>
+                  <div className="text-xs text-muted-foreground">
+                    Expires: {new Date(item.expiresAt).toLocaleString()}
+                  </div>
+
+                  {editingCloudId === item.id ? (
                     <div className="flex gap-2">
-                      <Button size="sm" onClick={() => saveContent(item.id)}>
-                        Save content
+                      <Input value={nameDraft} onChange={(e) => setNameDraft(e.target.value)} />
+                      <Button size="sm" onClick={() => void saveCloudRename(item.id)}>
+                        Save
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setEditingContentId(null);
-                          setContentDraft('');
-                        }}
-                      >
+                      <Button size="sm" variant="outline" onClick={() => setEditingCloudId(null)}>
                         Cancel
                       </Button>
                     </div>
-                  </div>
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => navigator.clipboard.writeText(item.link)}
-                    >
-                      Copy
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => window.open(item.link, '_blank')}
-                    >
-                      Open
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => beginRename(item)}>
-                      Rename
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => void beginEditContent(item)}>
-                      Edit content
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => toggleVisibility(item)}>
-                      Make {item.visibility === 'public' ? 'private' : 'public'}
-                    </Button>
-                    {TTL_OPTIONS.map((ttl) => (
+                  ) : editingCloudContentId === item.id ? (
+                    <div className="space-y-2">
+                      <Textarea
+                        value={contentDraft}
+                        onChange={(e) => setContentDraft(e.target.value)}
+                        className="font-mono min-h-48"
+                      />
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={() => void saveCloudContent(item.id)}>
+                          Save content
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setEditingCloudContentId(null);
+                            setContentDraft('');
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
                       <Button
-                        key={`${item.id}-${ttl}`}
                         size="sm"
                         variant="outline"
-                        onClick={() => extend(item, ttl)}
+                        onClick={() => void handleCopy(item.link, 'Cloud share link copied.')}
                       >
-                        +{ttl}d
+                        Copy
                       </Button>
-                    ))}
-                    <Button size="sm" variant="destructive" onClick={() => remove(item.id)}>
-                      Delete
-                    </Button>
-                  </div>
-                )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => window.open(item.link, '_blank')}
+                      >
+                        Open
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => beginRenameCloud(item)}>
+                        Rename
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => void beginEditCloudContent(item)}
+                      >
+                        Edit content
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => void toggleVisibility(item)}>
+                        Make {item.visibility === 'public' ? 'private' : 'public'}
+                      </Button>
+                      {TTL_OPTIONS.map((ttl) => (
+                        <Button
+                          key={`${item.id}-${ttl}`}
+                          size="sm"
+                          variant="outline"
+                          onClick={() => void extend(item, ttl)}
+                        >
+                          +{ttl}d
+                        </Button>
+                      ))}
+                      <Button size="sm" variant="destructive" onClick={() => void removeCloud(item.id)}>
+                        Delete
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </TabsContent>
+
+          <TabsContent value="local" className="space-y-3">
+            {localItems.length === 0 ? (
+              <div className="rounded-md border border-border bg-card p-6 text-sm text-muted-foreground">
+                No local snapshots yet. Use Share -&gt; Local -&gt; Save snapshot locally.
               </div>
-            ))}
-          </div>
-        )}
+            ) : (
+              localItems.map((item) => (
+                <div key={item.id} className="rounded-md border border-border bg-card p-4 space-y-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="font-medium">{item.name}</div>
+                    <Badge variant="outline">{localSourceLabel(item.sourceType)}</Badge>
+                  </div>
+
+                  <div className="text-xs text-muted-foreground">
+                    Updated: {new Date(item.updatedAt).toLocaleString()}
+                  </div>
+                  {item.lastOpenedAt ? (
+                    <div className="text-xs text-muted-foreground">
+                      Last opened from share: {new Date(item.lastOpenedAt).toLocaleString()}
+                    </div>
+                  ) : null}
+
+                  {editingLocalId === item.id ? (
+                    <div className="flex gap-2">
+                      <Input value={nameDraft} onChange={(e) => setNameDraft(e.target.value)} />
+                      <Button size="sm" onClick={() => saveLocalRename(item.id)}>
+                        Save
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setEditingLocalId(null)}>
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      <Button size="sm" variant="outline" onClick={() => openLocalSnapshot(item)}>
+                        Open in builder
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => void copyLocalShareLink(item)}
+                      >
+                        Copy local link
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => void handleCopy(item.markdown, 'Markdown copied.')}
+                      >
+                        Copy markdown
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => beginRenameLocal(item)}>
+                        Rename
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => removeLocal(item.id)}>
+                        Delete
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

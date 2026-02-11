@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Check, ExternalLink, Loader2, Share2 } from 'lucide-react';
+import { Check, Loader2, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useOSTStore } from '@/store/ostStore';
 import { toast } from '@/components/ui/use-toast';
@@ -20,7 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { createStoredShare, getAuthMe } from '@/lib/storedShareApi';
 
 type ShareMode = 'local' | 'cloud';
@@ -38,19 +37,18 @@ export function ShareAction() {
   const [loadingAuth, setLoadingAuth] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [featureEnabled, setFeatureEnabled] = useState(true);
   const [cloudShareUiEnabled, setCloudShareUiEnabled] = useState(false);
-  const [user, setUser] = useState<{ name?: string; provider: 'github' } | null>(null);
-  const [created, setCreated] = useState<{
-    link: string;
-    expiresAt: number;
-    visibility: Visibility;
-  } | null>(null);
+  const [featureEnabled, setFeatureEnabled] = useState(true);
+  const [user, setUser] = useState<{ name?: string } | null>(null);
 
-  const expiresLabel = useMemo(() => {
-    if (!created?.expiresAt) return '';
-    return new Date(created.expiresAt).toLocaleString();
-  }, [created?.expiresAt]);
+  const cloudAvailable = cloudShareUiEnabled && featureEnabled;
+
+  const description = useMemo(() => {
+    if (!cloudAvailable) return 'Copy a local browser-only share link.';
+    return mode === 'local'
+      ? 'Copy a local browser-only share link.'
+      : 'Create a short share link stored in your account.';
+  }, [cloudAvailable, mode]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -64,14 +62,7 @@ export function ShareAction() {
     try {
       const data = await getAuthMe();
       setFeatureEnabled(data.featureEnabled);
-      if (data.user) {
-        setUser({
-          name: data.user.name,
-          provider: data.user.provider,
-        });
-      } else {
-        setUser(null);
-      }
+      setUser(data.user ? { name: data.user.name } : null);
     } catch {
       setFeatureEnabled(false);
       setUser(null);
@@ -83,10 +74,11 @@ export function ShareAction() {
   const handleOpenChange = (nextOpen: boolean) => {
     setOpen(nextOpen);
     if (!nextOpen) {
-      setCreated(null);
       setCopied(false);
       return;
     }
+    const payload = getSharePayload();
+    setName(payload.name);
     if (cloudShareUiEnabled) {
       void loadAuth();
     }
@@ -96,16 +88,7 @@ export function ShareAction() {
     const url = getShareLink();
     await navigator.clipboard.writeText(url);
     setCopied(true);
-    toast({
-      title: 'Share link copied',
-      description: 'Data stays in the URL fragment and browser.',
-    });
-  };
-
-  const login = (provider: 'github') => {
-    const returnTo = `${window.location.pathname}${window.location.search}`;
-    const url = `/api/auth/login?provider=${provider}&returnTo=${encodeURIComponent(returnTo)}`;
-    window.location.href = url;
+    toast({ title: 'Copied', description: 'Local share link copied.' });
   };
 
   const handleCreateCloudShare = async () => {
@@ -120,32 +103,20 @@ export function ShareAction() {
         settings: payload.settings,
         collapsedIds: payload.collapsedIds,
       });
-      setCreated({
-        link: result.link,
-        expiresAt: result.expiresAt,
-        visibility: result.visibility,
-      });
       await navigator.clipboard.writeText(result.link);
       toast({
-        title: 'Stored share created',
-        description: 'Short link copied to clipboard.',
+        title: 'Copied',
+        description: 'Short share link created and copied.',
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Could not create stored share.';
       toast({
         title: 'Share failed',
-        description: message,
+        description: error instanceof Error ? error.message : 'Could not create short link.',
         variant: 'destructive',
       });
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const handleCopyCreatedLink = async () => {
-    if (!created) return;
-    await navigator.clipboard.writeText(created.link);
-    toast({ title: 'Copied', description: 'Stored share link copied.' });
   };
 
   return (
@@ -156,28 +127,24 @@ export function ShareAction() {
           <span className="hidden sm:inline">Share</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Share Opportunity Tree</DialogTitle>
-          <DialogDescription>
-            {cloudShareUiEnabled
-              ? 'Choose local sharing (browser-only) or optional OST-Builder storage with expiry.'
-              : 'Share locally with browser-only URL fragments.'}
-          </DialogDescription>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
-        <div className={`grid gap-3 ${cloudShareUiEnabled ? 'sm:grid-cols-2' : 'sm:grid-cols-1'}`}>
-          <button
-            type="button"
-            onClick={() => setMode('local')}
-            className={`rounded-md border p-3 text-left transition ${
-              mode === 'local' ? 'border-primary bg-primary/5' : 'border-border bg-muted/30'
-            }`}
-          >
-            <div className="text-sm font-medium">Share-only</div>
-            <div className="text-xs text-muted-foreground mt-1">Data stays in URL/browser.</div>
-          </button>
-          {cloudShareUiEnabled && (
+        {cloudAvailable && (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => setMode('local')}
+              className={`rounded-md border p-3 text-left transition ${
+                mode === 'local' ? 'border-primary bg-primary/5' : 'border-border bg-muted/30'
+              }`}
+            >
+              <div className="text-sm font-medium">Local link</div>
+              <div className="text-xs text-muted-foreground mt-1">Browser-only fragment link.</div>
+            </button>
             <button
               type="button"
               onClick={() => setMode('cloud')}
@@ -185,17 +152,15 @@ export function ShareAction() {
                 mode === 'cloud' ? 'border-primary bg-primary/5' : 'border-border bg-muted/30'
               }`}
             >
-              <div className="text-sm font-medium">Save & Share</div>
-              <div className="text-xs text-muted-foreground mt-1">
-                Save in your Account with Share link.
-              </div>
+              <div className="text-sm font-medium">Short link</div>
+              <div className="text-xs text-muted-foreground mt-1">Stored link with TTL controls.</div>
             </button>
-          )}
-        </div>
+          </div>
+        )}
 
-        {mode === 'local' && (
-          <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2 justify-center">
-            <div className="text-sm">Generate a share link without server storage.</div>
+        {(!cloudAvailable || mode === 'local') && (
+          <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2">
+            <div className="text-sm">Create and copy a share link for the current tree.</div>
             <Button onClick={handleLocalShare} className="gap-2">
               {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
               {copied ? 'Copied' : 'Copy share link'}
@@ -203,13 +168,7 @@ export function ShareAction() {
           </div>
         )}
 
-        {mode === 'cloud' && !featureEnabled && (
-          <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
-            Stored shares are currently disabled in this environment.
-          </div>
-        )}
-
-        {mode === 'cloud' && featureEnabled && (
+        {cloudAvailable && mode === 'cloud' && (
           <div className="space-y-3">
             {loadingAuth ? (
               <div className="rounded-md border border-border p-4 flex items-center gap-2 text-sm">
@@ -218,99 +177,54 @@ export function ShareAction() {
               </div>
             ) : !user ? (
               <div className="rounded-md border border-border bg-muted/20 p-3 space-y-3">
-                <div className="text-sm">Sign in to create managed, expiring short links.</div>
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => login('github')}>
-                    Continue with GitHub
-                  </Button>
-                </div>
+                <div className="text-sm">Sign in to create short links.</div>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const returnTo = `${window.location.pathname}${window.location.search}`;
+                    window.location.href = `/api/auth/login?provider=github&returnTo=${encodeURIComponent(returnTo)}`;
+                  }}
+                >
+                  Continue with GitHub
+                </Button>
               </div>
             ) : (
               <>
-                <div className="rounded-md border border-border bg-muted/20 p-3 text-sm flex items-center justify-between">
-                  <span>Signed in as {user.name || 'account user'}</span>
-                  <Badge variant="secondary" className="capitalize">
-                    {user.provider}
-                  </Badge>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Share name</label>
+                  <Input value={name} onChange={(e) => setName(e.target.value)} />
                 </div>
-
-                <div className="grid gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-sm font-medium">Share name (optional)</label>
-                    <Input
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Use current project name if empty"
-                    />
+                    <label className="text-sm font-medium">Visibility</label>
+                    <Select value={visibility} onValueChange={(value) => setVisibility(value as Visibility)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="public">Public</SelectItem>
+                        <SelectItem value="private">Private</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-sm font-medium">Visibility</label>
-                      <Select
-                        value={visibility}
-                        onValueChange={(value) => setVisibility(value as Visibility)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="public">Public</SelectItem>
-                          <SelectItem value="private">Private (only me)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-sm font-medium">TTL</label>
-                      <Select
-                        value={String(ttlDays)}
-                        onValueChange={(value) => setTtlDays(Number(value) as TtlDays)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="1">1 day</SelectItem>
-                          <SelectItem value="7">7 days</SelectItem>
-                          <SelectItem value="30">30 days</SelectItem>
-                          <SelectItem value="90">90 days</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium">TTL</label>
+                    <Select value={String(ttlDays)} onValueChange={(value) => setTtlDays(Number(value) as TtlDays)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 day</SelectItem>
+                        <SelectItem value="7">7 days</SelectItem>
+                        <SelectItem value="30">30 days</SelectItem>
+                        <SelectItem value="90">90 days</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-
-                  {!created ? (
-                    <Button onClick={handleCreateCloudShare} disabled={submitting}>
-                      {submitting ? 'Creating...' : 'Create short link'}
-                    </Button>
-                  ) : (
-                    <div className="rounded-md border border-border p-3 space-y-3">
-                      <div className="text-xs text-muted-foreground">Stored link</div>
-                      <div className="text-sm break-all">{created.link}</div>
-                      <div className="text-xs text-muted-foreground">
-                        Visibility: {created.visibility} | Expires: {expiresLabel}
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" onClick={handleCopyCreatedLink}>
-                          Copy
-                        </Button>
-                        <Button
-                          variant="outline"
-                          onClick={() => window.open(created.link, '_blank')}
-                        >
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                          Open
-                        </Button>
-                        <Button
-                          variant="outline"
-                          onClick={() => (window.location.href = '/shares')}
-                        >
-                          Manage shares
-                        </Button>
-                      </div>
-                    </div>
-                  )}
                 </div>
+                <Button onClick={handleCreateCloudShare} disabled={submitting}>
+                  {submitting ? 'Creating...' : 'Create and copy short link'}
+                </Button>
               </>
             )}
           </div>
