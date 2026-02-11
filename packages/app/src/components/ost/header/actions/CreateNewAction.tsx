@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { CirclePlus } from 'lucide-react';
+import { nanoid } from 'nanoid';
 import { Button } from '@/components/ui/button';
 import { useOSTStore } from '@/store/ostStore';
 import { OST_EXAMPLES } from '@ost-builder/shared';
-import { upsertDraftSnapshot } from '@/lib/localSnapshots';
+import { setActiveLocalSnapshotSourceKey, upsertLocalSnapshotBySource } from '@/lib/localSnapshots';
 import {
   Dialog,
   DialogContent,
@@ -19,11 +20,13 @@ export function CreateNewAction() {
 
   const createAndSave = (markdown: string, name: string) => {
     createNewTree(markdown, name);
-    upsertDraftSnapshot({
+    const sourceKey = `create-new:${nanoid(10)}`;
+    upsertLocalSnapshotBySource(sourceKey, 'create-new', {
       name,
       markdown,
       collapsedIds: [],
     });
+    setActiveLocalSnapshotSourceKey(sourceKey);
     setCreateOpen(false);
   };
 

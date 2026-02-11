@@ -46,17 +46,19 @@ import { toast } from '@/components/ui/use-toast';
 import { useOSTStore } from '@/store/ostStore';
 
 const CLOUD_SHARE_UI_TOGGLE_KEY = 'ost:feature:cloud-share';
+const DEFAULT_PROJECT_NAME = 'My Opportunity Solution Tree';
 
-function localSourceLabel(sourceType?: LocalSnapshot['sourceType']): string {
-  if (sourceType === 'draft') return 'active';
+function localSourceLabel(sourceType?: LocalSnapshot['sourceType'], isActive?: boolean): string {
+  if (isActive) return 'active';
+  if (sourceType === 'draft') return 'local';
   if (sourceType === 'share-cloud') return 'from cloud share';
   if (sourceType === 'share-fragment') return 'from local share';
   if (sourceType === 'create-new') return 'from create new';
   return 'local';
 }
 
-function sourceBadgeClass(sourceType?: LocalSnapshot['sourceType']): string | undefined {
-  if (sourceType === 'draft') {
+function sourceBadgeClass(isActive?: boolean): string | undefined {
+  if (isActive) {
     return 'bg-emerald-500/15 text-emerald-700 border-emerald-400/50 motion-safe:animate-pulse';
   }
   return undefined;
@@ -66,6 +68,25 @@ function isCloudFeatureToggleEnabled(): boolean {
   if (typeof window === 'undefined') return false;
   const raw = (window.localStorage.getItem(CLOUD_SHARE_UI_TOGGLE_KEY) || '').toLowerCase();
   return raw === '1' || raw === 'true' || raw === 'enabled' || raw === 'on';
+}
+
+function applyProjectNameToMarkdown(markdown: string, name: string): string {
+  const safeName = name.trim() || DEFAULT_PROJECT_NAME;
+  const lines = markdown.split('\n');
+  if (lines[0]?.startsWith('# ')) {
+    lines[0] = `# ${safeName}`;
+    return lines.join('\n');
+  }
+  return [`# ${safeName}`, '', markdown].join('\n').trimStart();
+}
+
+function extractProjectNameFromMarkdown(markdown: string): string {
+  const firstLine = markdown.split('\n')[0]?.trim() || '';
+  if (firstLine.startsWith('# ')) {
+    const name = firstLine.slice(2).trim();
+    return name || DEFAULT_PROJECT_NAME;
+  }
+  return DEFAULT_PROJECT_NAME;
 }
 
 function EditInBuilderIcon({ className }: { className?: string }) {
@@ -88,7 +109,7 @@ function EditInBuilderIcon({ className }: { className?: string }) {
 
 export default function Library() {
   const navigate = useNavigate();
-  const { loadFromStoredShare } = useOSTStore();
+  const { loadFromStoredShare, setProjectName } = useOSTStore();
 
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<LocalSnapshot[]>([]);
@@ -98,6 +119,7 @@ export default function Library() {
   const [contentDraft, setContentDraft] = useState('');
   const [pendingLoadItem, setPendingLoadItem] = useState<LocalSnapshot | null>(null);
   const [pendingDeleteItem, setPendingDeleteItem] = useState<LocalSnapshot | null>(null);
+  const [activeSourceKey, setActiveSourceKey] = useState<string | null>(null);
 
   const [cloudToggleEnabled, setCloudToggleEnabled] = useState(false);
   const [cloudFeatureEnabled, setCloudFeatureEnabled] = useState(false);
@@ -109,6 +131,7 @@ export default function Library() {
   const load = async () => {
     setLoading(true);
     setItems(listLocalSnapshots());
+    setActiveSourceKey(getActiveLocalSnapshotSourceKey());
 
     const toggleEnabled = isCloudFeatureToggleEnabled();
     setCloudToggleEnabled(toggleEnabled);
@@ -159,6 +182,7 @@ export default function Library() {
       setItems(listLocalSnapshots());
     }
     setActiveLocalSnapshotSourceKey(sourceKey);
+    setActiveSourceKey(sourceKey);
     loadFromStoredShare({
       markdown: item.markdown,
       name: item.name,
@@ -187,7 +211,17 @@ export default function Library() {
   };
 
   const saveLocalRename = (id: string) => {
-    updateLocalSnapshot(id, { name: nameDraft });
+    const item = items.find((entry) => entry.id === id);
+    if (!item) return;
+
+    const nextName = nameDraft.trim() || DEFAULT_PROJECT_NAME;
+    const nextMarkdown = applyProjectNameToMarkdown(item.markdown, nextName);
+    updateLocalSnapshot(id, { name: nextName, markdown: nextMarkdown });
+
+    if (item.sourceKey && item.sourceKey === activeSourceKey) {
+      setProjectName(nextName);
+    }
+
     setEditingId(null);
     setNameDraft('');
     setItems(listLocalSnapshots());
@@ -200,7 +234,22 @@ export default function Library() {
   };
 
   const saveContent = (id: string) => {
-    updateLocalSnapshot(id, { markdown: contentDraft });
+    const item = items.find((entry) => entry.id === id);
+    if (!item) return;
+
+    const nextMarkdown = contentDraft;
+    const nextName = extractProjectNameFromMarkdown(nextMarkdown);
+    updateLocalSnapshot(id, { markdown: nextMarkdown, name: nextName });
+
+    if (item.sourceKey && item.sourceKey === activeSourceKey) {
+      loadFromStoredShare({
+        markdown: nextMarkdown,
+        name: nextName,
+        settings: item.settings,
+        collapsedIds: item.collapsedIds || [],
+      });
+    }
+
     setEditingContentId(null);
     setContentDraft('');
     setItems(listLocalSnapshots());
@@ -307,7 +356,7 @@ export default function Library() {
           <div>
             <h1 className="text-2xl font-semibold flex items-center gap-2">
               <LibraryIcon className="w-6 h-6" />
-              Saved Library
+              Your OST Library
             </h1>
             <p className="text-xs text-muted-foreground mt-1">
               Your OSTs are auto-saved locally. Active entry updates automatically while editing.
@@ -361,13 +410,15 @@ export default function Library() {
           </div>
         ) : (
           <div className="space-y-3">
-            {items.map((item) => (
-              <div key={item.id} className="rounded-md border border-border bg-card p-4 space-y-3">
+            {items.map((item) => {
+              const isActiveItem = !!item.sourceKey && item.sourceKey === activeSourceKey;
+              return (
+                <div key={item.id} className="rounded-md border border-border bg-card p-4 space-y-3">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex flex-wrap items-center gap-2">
                     <div className="font-medium">{item.name}</div>
-                    <Badge variant="outline" className={sourceBadgeClass(item.sourceType)}>
-                      {localSourceLabel(item.sourceType)}
+                    <Badge variant="outline" className={sourceBadgeClass(isActiveItem)}>
+                      {localSourceLabel(item.sourceType, isActiveItem)}
                     </Badge>
                     {item.syncedAt ? (
                       <Badge variant="secondary">synced</Badge>
@@ -438,7 +489,7 @@ export default function Library() {
                       size="sm"
                       variant="outline"
                       onClick={() => {
-                        if (item.sourceType === 'draft') {
+                        if (isActiveItem) {
                           openLocalSnapshot(item);
                           return;
                         }
@@ -446,12 +497,14 @@ export default function Library() {
                       }}
                     >
                       <EditInBuilderIcon className="w-4 h-4 mr-2" />
-                      {item.sourceType === 'draft' ? 'Edit in builder' : 'Load in builder'}
+                      {isActiveItem ? 'Edit in builder' : 'Load in builder'}
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => beginEditContent(item)}>
-                      <Edit3 className="w-4 h-4 mr-2" />
-                      Edit Markdown
-                    </Button>
+                    {isActiveItem ? (
+                      <Button size="sm" variant="outline" onClick={() => beginEditContent(item)}>
+                        <Edit3 className="w-4 h-4 mr-2" />
+                        Edit Markdown
+                      </Button>
+                    ) : null}
                     <Button
                       size="sm"
                       variant="outline"
@@ -470,8 +523,9 @@ export default function Library() {
                     </Button>
                   </div>
                 )}
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
