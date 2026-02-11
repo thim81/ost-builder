@@ -8,6 +8,10 @@ import { useOSTStore } from '@/store/ostStore';
 import { decodeMarkdownFromUrlFragment } from '@ost-builder/shared';
 import {
   buildFragmentSourceKey,
+  findLocalSnapshotBySource,
+  getActiveLocalSnapshotSourceKey,
+  setActiveLocalSnapshotSourceKey,
+  upsertLocalSnapshotBySource,
   upsertDraftSnapshot,
   upsertShareSnapshot,
 } from '@/lib/localSnapshots';
@@ -34,7 +38,7 @@ function LibraryAutoSave() {
     }
 
     timerRef.current = window.setTimeout(() => {
-      upsertDraftSnapshot({
+      const payload = {
         name: projectName,
         markdown,
         settings: {
@@ -43,8 +47,19 @@ function LibraryAutoSave() {
           viewDensity,
         },
         collapsedIds: collapsedCardIds,
-      });
-    }, 3000);
+      };
+
+      const activeSourceKey = getActiveLocalSnapshotSourceKey();
+      if (activeSourceKey) {
+        const existing = findLocalSnapshotBySource(activeSourceKey);
+        if (existing?.sourceType) {
+          upsertLocalSnapshotBySource(activeSourceKey, existing.sourceType, payload);
+          return;
+        }
+      }
+
+      upsertDraftSnapshot(payload);
+    }, 1000);
 
     return () => {
       if (timerRef.current) window.clearTimeout(timerRef.current);
@@ -68,12 +83,14 @@ function ShareLinkLoader() {
       const fragment = hash.startsWith('#') ? hash.slice(1) : hash;
       const decoded = decodeMarkdownFromUrlFragment(fragment);
       if (decoded) {
-        upsertShareSnapshot(buildFragmentSourceKey(fragment), 'share-fragment', {
+        const sourceKey = buildFragmentSourceKey(fragment);
+        upsertShareSnapshot(sourceKey, 'share-fragment', {
           name: decoded.name || useOSTStore.getState().projectName,
           markdown: decoded.markdown,
           settings: decoded.settings,
           collapsedIds: decoded.collapsedIds || [],
         });
+        setActiveLocalSnapshotSourceKey(sourceKey);
       }
     }
 
@@ -98,7 +115,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/s/:id" element={<StoredShareOpen />} />
-          <Route path="/shares" element={<Library />} />
+          <Route path="/library" element={<Library />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

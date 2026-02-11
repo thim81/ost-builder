@@ -2,6 +2,7 @@ import { nanoid } from 'nanoid';
 import type { ShareSettings } from '@ost-builder/shared';
 
 const STORAGE_KEY = 'ost:local:snapshots:v1';
+const ACTIVE_SOURCE_KEY_STORAGE = 'ost:local:active-source-key';
 
 export type SnapshotSourceType = 'draft' | 'create-new' | 'share-cloud' | 'share-fragment' | 'manual';
 
@@ -213,4 +214,19 @@ export function updateLocalSnapshot(
 export function deleteLocalSnapshot(id: string): void {
   const current = readRaw();
   writeRaw(current.filter((item) => item.id !== id));
+}
+
+export function getActiveLocalSnapshotSourceKey(): string | null {
+  if (typeof window === 'undefined') return null;
+  return window.localStorage.getItem(ACTIVE_SOURCE_KEY_STORAGE);
+}
+
+export function setActiveLocalSnapshotSourceKey(sourceKey: string): void {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(ACTIVE_SOURCE_KEY_STORAGE, sourceKey);
+}
+
+export function clearActiveLocalSnapshotSourceKey(): void {
+  if (typeof window === 'undefined') return;
+  window.localStorage.removeItem(ACTIVE_SOURCE_KEY_STORAGE);
 }

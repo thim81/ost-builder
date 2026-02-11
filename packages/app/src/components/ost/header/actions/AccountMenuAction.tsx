@@ -14,11 +14,20 @@ import {
 import { getAuthMe, logout, type AuthUser } from '@/lib/storedShareApi';
 import { toast } from '@/components/ui/use-toast';
 
+const CLOUD_SHARE_UI_TOGGLE_KEY = 'ost:feature:cloud-share';
+
+function isCloudShareUiEnabled(): boolean {
+  if (typeof window === 'undefined') return false;
+  const raw = (window.localStorage.getItem(CLOUD_SHARE_UI_TOGGLE_KEY) || '').toLowerCase();
+  return raw === '1' || raw === 'true' || raw === 'enabled' || raw === 'on';
+}
+
 export function AccountMenuAction() {
   const navigate = useNavigate();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [featureEnabled, setFeatureEnabled] = useState(true);
   const [loading, setLoading] = useState(false);
+  const cloudUiEnabled = useMemo(() => isCloudShareUiEnabled(), []);
 
   const initials = useMemo(() => {
     const source = user?.name || user?.email || '';
@@ -40,8 +49,11 @@ export function AccountMenuAction() {
   };
 
   useEffect(() => {
+    if (!cloudUiEnabled) return;
     void refreshSession();
-  }, []);
+  }, [cloudUiEnabled]);
+
+  if (!cloudUiEnabled) return null;
 
   const handleLogin = () => {
     const returnTo = `${window.location.pathname}${window.location.search}`;
@@ -100,7 +112,7 @@ export function AccountMenuAction() {
 
         {featureEnabled && user && (
           <>
-            <DropdownMenuItem onClick={() => navigate('/shares')}>
+            <DropdownMenuItem onClick={() => navigate('/library')}>
               <FolderOpen className="w-4 h-4 mr-2" />
               Manage shares
             </DropdownMenuItem>

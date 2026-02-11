@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { getStoredShare } from '@/lib/storedShareApi';
-import { upsertShareSnapshot } from '@/lib/localSnapshots';
+import { setActiveLocalSnapshotSourceKey, upsertShareSnapshot } from '@/lib/localSnapshots';
 import { useOSTStore } from '@/store/ostStore';
 
 type LoadState =
@@ -24,12 +24,14 @@ export default function StoredShareOpen() {
       try {
         const payload = await getStoredShare(id);
         if (!active) return;
-        upsertShareSnapshot(`cloud:${id}`, 'share-cloud', {
+        const sourceKey = `cloud:${id}`;
+        upsertShareSnapshot(sourceKey, 'share-cloud', {
           name: payload.name || 'Untitled OST',
           markdown: payload.markdown,
           settings: payload.settings,
           collapsedIds: payload.collapsedIds || [],
         });
+        setActiveLocalSnapshotSourceKey(sourceKey);
         loadFromStoredShare({
           markdown: payload.markdown,
           name: payload.name || undefined,
