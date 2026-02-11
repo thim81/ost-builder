@@ -169,12 +169,6 @@ export default function MyShares() {
             >
               Continue with GitHub
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => (window.location.href = '/api/auth/login?provider=google&returnTo=/shares')}
-            >
-              Continue with Google
-            </Button>
           </div>
           <Button variant="ghost" onClick={() => navigate('/')}>Back to builder</Button>
         </div>

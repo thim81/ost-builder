@@ -34,7 +34,7 @@ export default function StoredShareOpen() {
         if (!active) return;
         const err = error as Error & {
           status?: number;
-          payload?: { reason?: string; login?: { github?: string; google?: string } };
+          payload?: { reason?: string; login?: { github?: string } };
         };
         if (err.status === 401) {
           setState({ kind: 'auth-required' });
@@ -82,15 +82,6 @@ export default function StoredShareOpen() {
                 }
               >
                 Continue with GitHub
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() =>
-                  (window.location.href =
-                    `/api/auth/login?provider=google&returnTo=${encodeURIComponent(`/s/${id}`)}`)
-                }
-              >
-                Continue with Google
               </Button>
             </div>
           </>

@@ -53,7 +53,7 @@ With OST-builder, you can type Markdown or add Opportunities/Solutions directly,
 ## Share modes and privacy
 
 - Local share (default): URL hash fragment, no account required, data stays in URL/browser context.
-- Stored share (optional): sign in with GitHub/Google, store markdown in Cloudflare KV with TTL (`1/7/30/90` days), and manage links from the app.
+- Stored share (optional): sign in with GitHub, store markdown in Cloudflare KV with TTL (`1/7/30/90` days), and manage links from the app.
 
 ### Cloudflare setup for stored shares
 
@@ -63,7 +63,6 @@ Configure these bindings/secrets for Pages Functions:
 - `SHARE_DB` (D1 binding with `shares` table schema in `packages/app/functions/schema.sql`)
 - `AUTH_SESSION_SECRET`
 - `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`
-- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
 - `FEATURE_STORED_SHARE_ENABLED` (`true` by default, set `false` to disable)
 
 This project is open‑source and free — my small way to give back to the PM community. Feedback is very welcome.

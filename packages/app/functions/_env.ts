@@ -1,4 +1,4 @@
-export type OAuthProvider = 'github' | 'google';
+export type OAuthProvider = 'github';
 
 export type SessionUser = {
   sub: string;
@@ -14,8 +14,6 @@ export type EnvBindings = {
   AUTH_SESSION_SECRET: string;
   GITHUB_CLIENT_ID: string;
   GITHUB_CLIENT_SECRET: string;
-  GOOGLE_CLIENT_ID: string;
-  GOOGLE_CLIENT_SECRET: string;
   FEATURE_STORED_SHARE_ENABLED?: string;
 };
 
@@ -38,8 +36,6 @@ export function assertRequiredEnv(env: EnvBindings): void {
     'AUTH_SESSION_SECRET',
     'GITHUB_CLIENT_ID',
     'GITHUB_CLIENT_SECRET',
-    'GOOGLE_CLIENT_ID',
-    'GOOGLE_CLIENT_SECRET',
   ].filter((key) => !(env as unknown as Record<string, unknown>)[key]);
 
   if (missing.length > 0) {

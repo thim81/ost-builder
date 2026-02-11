@@ -38,7 +38,7 @@ export function ShareAction() {
   const [submitting, setSubmitting] = useState(false);
   const [copied, setCopied] = useState(false);
   const [featureEnabled, setFeatureEnabled] = useState(true);
-  const [user, setUser] = useState<{ name?: string; provider: 'github' | 'google' } | null>(null);
+  const [user, setUser] = useState<{ name?: string; provider: 'github' } | null>(null);
   const [created, setCreated] = useState<{ link: string; expiresAt: number; visibility: Visibility } | null>(
     null,
   );
@@ -89,7 +89,7 @@ export function ShareAction() {
     });
   };
 
-  const login = (provider: 'github' | 'google') => {
+  const login = (provider: 'github') => {
     const returnTo = `${window.location.pathname}${window.location.search}`;
     const url = `/api/auth/login?provider=${provider}&returnTo=${encodeURIComponent(returnTo)}`;
     window.location.href = url;
@@ -203,9 +203,6 @@ export function ShareAction() {
                 <div className="flex gap-2">
                   <Button variant="outline" onClick={() => login('github')}>
                     Continue with GitHub
-                  </Button>
-                  <Button variant="outline" onClick={() => login('google')}>
-                    Continue with Google
                   </Button>
                 </div>
               </div>

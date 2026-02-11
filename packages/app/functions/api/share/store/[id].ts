@@ -73,7 +73,6 @@ export async function onRequest(context: FunctionContext<{ id: string }>): Promi
           private: true,
           login: {
             github: `/api/auth/login?provider=github&returnTo=${encodeURIComponent(`/s/${id}`)}`,
-            google: `/api/auth/login?provider=google&returnTo=${encodeURIComponent(`/s/${id}`)}`,
           },
         },
         401,

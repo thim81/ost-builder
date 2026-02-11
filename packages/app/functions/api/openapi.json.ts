@@ -20,7 +20,7 @@ function buildSpec(requestUrl: string) {
               name: 'provider',
               in: 'query',
               required: true,
-              schema: { type: 'string', enum: ['github', 'google'] },
+              schema: { type: 'string', enum: ['github'] },
             },
             {
               name: 'returnTo',
@@ -57,7 +57,7 @@ function buildSpec(requestUrl: string) {
                         type: ['object', 'null'],
                         properties: {
                           sub: { type: 'string' },
-                          provider: { type: 'string', enum: ['github', 'google'] },
+                          provider: { type: 'string', enum: ['github'] },
                           name: { type: 'string' },
                           email: { type: 'string' },
                           avatarUrl: { type: 'string' },

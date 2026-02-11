@@ -2,7 +2,7 @@ import type { ShareSettings } from '@ost-builder/shared';
 
 export type AuthUser = {
   sub: string;
-  provider: 'github' | 'google';
+  provider: 'github';
   name?: string;
   email?: string;
   avatarUrl?: string;
