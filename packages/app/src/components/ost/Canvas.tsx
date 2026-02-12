@@ -17,6 +17,7 @@ import { AddCardButton } from './AddCardButton';
 import { LayoutToggleAction } from './header/actions/LayoutToggleAction';
 import { SettingsAction } from './header/actions/SettingsAction';
 import { ExportAction } from './header/actions/ExportAction';
+import { CanvasSyncAction } from './header/actions/CanvasSyncAction';
 import { cn } from '@/lib/utils';
 import type { OSTCard as OSTCardType } from '@ost-builder/shared';
 import { Button } from '@/components/ui/button';
@@ -201,6 +202,7 @@ export function Canvas() {
         onClick={(e) => e.stopPropagation()}
       >
         <ExportAction />
+        <CanvasSyncAction />
         <div className="w-px h-6 bg-border" />
         <LayoutToggleAction compact />
         <div className="w-px h-6 bg-border" />
