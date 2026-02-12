@@ -30,7 +30,7 @@ export function CloudShareAction() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [open, setOpen] = useState(false);
-  const [visibility, setVisibility] = useState<'public' | 'private'>('private');
+  const [visibility, setVisibility] = useState<'public' | 'private'>('public');
   const [ttlDays, setTtlDays] = useState<1 | 7 | 30 | 90>(30);
 
   const show = useMemo(
@@ -116,8 +116,8 @@ export function CloudShareAction() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="private">Only me</SelectItem>
                 <SelectItem value="public">Anyone with link</SelectItem>
+                <SelectItem value="private">Only me</SelectItem>
               </SelectContent>
             </Select>
           </div>
