@@ -42,6 +42,7 @@ import {
   deleteLocalSnapshot,
   getActiveLocalSnapshotSourceKey,
   listLocalSnapshots,
+  saveLocalSnapshot,
   setActiveLocalSnapshotSourceKey,
   updateLocalSnapshot,
   type LocalSnapshot,
@@ -355,6 +356,19 @@ export default function Library() {
     document.body.removeChild(anchor);
     URL.revokeObjectURL(href);
     toast({ title: 'Downloaded', description: `${filename} downloaded.` });
+  };
+
+  const duplicateItem = (item: LocalSnapshot) => {
+    const duplicatedName = `${(item.name || DEFAULT_PROJECT_NAME).trim()} (copy)`;
+    const duplicatedMarkdown = applyProjectNameToMarkdown(item.markdown, duplicatedName);
+    saveLocalSnapshot({
+      name: duplicatedName,
+      markdown: duplicatedMarkdown,
+      settings: item.settings,
+      collapsedIds: item.collapsedIds || [],
+    });
+    void reloadLocalItems();
+    toast({ title: 'Duplicated', description: 'A copy was added to your library.' });
   };
 
   const syncCountLabel = useMemo(() => {
@@ -706,6 +720,10 @@ export default function Library() {
                     <Button size="sm" variant="outline" onClick={() => downloadAsMarkdown(item)}>
                       <FileDown className="w-4 h-4 mr-2" />
                       Download Markdown
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => duplicateItem(item)}>
+                      <Copy className="w-4 h-4 mr-2" />
+                      Duplicate OST
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => void copyLocalShareLink(item)}>
                       <Share2 className="w-4 h-4 mr-2" />
