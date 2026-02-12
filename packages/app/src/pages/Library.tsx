@@ -465,6 +465,42 @@ export default function Library() {
     }
   };
 
+  const createOrCopyCloudLink = async (item: LocalSnapshot) => {
+    if (!syncAvailable) return;
+    if (!cloudUser) {
+      const returnTo = '/library';
+      window.location.href = `/api/auth/login?provider=github&returnTo=${encodeURIComponent(returnTo)}`;
+      return;
+    }
+
+    setSyncingItemId(item.id);
+    try {
+      let cloudId = getCloudId(item);
+      if (!cloudId) {
+        await syncItemToCloud(item);
+        const refreshed = listLocalSnapshots().find((entry) => entry.id === item.id) || null;
+        cloudId = refreshed ? getCloudId(refreshed) : null;
+      }
+
+      if (!cloudId) {
+        throw new Error('Cloud link is not available yet.');
+      }
+
+      const link = `${window.location.origin}/s/${cloudId}`;
+      await navigator.clipboard.writeText(link);
+      await reloadLocalItems();
+      toast({ title: 'Copied', description: 'Cloud share link copied.' });
+    } catch (error) {
+      toast({
+        title: 'Cloud link failed',
+        description: error instanceof Error ? error.message : 'Could not create cloud share link.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSyncingItemId(null);
+    }
+  };
+
   const updateItemVisibility = async (item: LocalSnapshot, visibility: ShareVisibility) => {
     setCloudVisibilityByItemId((prev) => ({ ...prev, [item.id]: visibility }));
     const cloudId = getCloudId(item);
@@ -650,6 +686,15 @@ export default function Library() {
                           Sync this item
                         </>
                       )}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => void createOrCopyCloudLink(item)}
+                      disabled={syncingItemId === item.id || syncing}
+                    >
+                      <Share2 className="w-4 h-4 mr-2" />
+                      Cloud link
                     </Button>
                   </div>
                 ) : null}
