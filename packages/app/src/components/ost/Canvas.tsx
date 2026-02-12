@@ -202,6 +202,7 @@ export function Canvas() {
         onClick={(e) => e.stopPropagation()}
       >
         <ExportAction />
+        <div className="w-px h-6 bg-border" />
         <CanvasSyncAction />
         <div className="w-px h-6 bg-border" />
         <LayoutToggleAction compact />

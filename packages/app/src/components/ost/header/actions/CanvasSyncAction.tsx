@@ -3,6 +3,7 @@ import { Cloud } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { createStoredShare, getAuthMe, getStoredShare, updateStoredShare } from '@/lib/storedShareApi';
 import {
+  buildSnapshotPayloadHash,
   findLocalSnapshotBySource,
   getActiveLocalSnapshotSourceKey,
   type LocalSnapshot,
@@ -30,20 +31,23 @@ function resolveCloudId(sourceKey: string | null, linkedCloudId?: string): strin
 
 type SyncVisualState = 'not-linked' | 'local-ahead' | 'in-sync' | 'cloud-ahead';
 
-function getSyncVisualState(snapshot: LocalSnapshot | null, remoteUpdatedAt: number | null): SyncVisualState {
+function getSyncVisualState(
+  snapshot: LocalSnapshot | null,
+  localPayloadHash: string,
+  remotePayloadHash: string | null,
+  remoteUpdatedAt: number | null,
+): SyncVisualState {
   if (!snapshot) return 'not-linked';
   const cloudId = resolveCloudId(snapshot.sourceKey || null, snapshot.cloudShareId);
   if (!cloudId) return 'not-linked';
 
-  const syncedAt = snapshot.syncedAt || 0;
-  const localUpdatedAt = snapshot.updatedAt || 0;
-  if (remoteUpdatedAt && remoteUpdatedAt > Math.max(localUpdatedAt, syncedAt)) {
+  if (remotePayloadHash && remotePayloadHash === localPayloadHash) {
+    return 'in-sync';
+  }
+  if (remoteUpdatedAt && remoteUpdatedAt > (snapshot.updatedAt || 0)) {
     return 'cloud-ahead';
   }
-  if (localUpdatedAt > syncedAt) {
-    return 'local-ahead';
-  }
-  return 'in-sync';
+  return 'local-ahead';
 }
 
 export function CanvasSyncAction() {
@@ -56,6 +60,7 @@ export function CanvasSyncAction() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [remoteUpdatedAt, setRemoteUpdatedAt] = useState<number | null>(null);
+  const [remotePayloadHash, setRemotePayloadHash] = useState<string | null>(null);
 
   const show = useMemo(
     () => isCloudShareUiEnabled() && featureEnabled && loggedIn,
@@ -73,9 +78,18 @@ export function CanvasSyncAction() {
     () => resolveCloudId(activeSourceKey, activeSnapshot?.cloudShareId),
     [activeSourceKey, activeSnapshot?.cloudShareId],
   );
+  const localPayloadHash = useMemo(() => {
+    const payload = getSharePayload();
+    return buildSnapshotPayloadHash({
+      name: payload.name,
+      markdown: payload.markdown,
+      settings: payload.settings,
+      collapsedIds: payload.collapsedIds,
+    });
+  }, [getSharePayload, markdown, projectName, collapsedCount, syncing]);
   const visualState = useMemo(
-    () => getSyncVisualState(activeSnapshot, remoteUpdatedAt),
-    [activeSnapshot, remoteUpdatedAt],
+    () => getSyncVisualState(activeSnapshot, localPayloadHash, remotePayloadHash, remoteUpdatedAt),
+    [activeSnapshot, localPayloadHash, remotePayloadHash, remoteUpdatedAt],
   );
 
   useEffect(() => {
@@ -83,15 +97,25 @@ export function CanvasSyncAction() {
     const run = async () => {
       if (!activeCloudId) {
         setRemoteUpdatedAt(null);
+        setRemotePayloadHash(null);
         return;
       }
       try {
         const share = await getStoredShare(activeCloudId);
         if (!active) return;
         setRemoteUpdatedAt(share.updatedAt || null);
+        setRemotePayloadHash(
+          buildSnapshotPayloadHash({
+            name: share.name || '',
+            markdown: share.markdown,
+            settings: share.settings,
+            collapsedIds: share.collapsedIds || [],
+          }),
+        );
       } catch {
         if (!active) return;
         setRemoteUpdatedAt(null);
+        setRemotePayloadHash(null);
       }
     };
     void run();
