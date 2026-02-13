@@ -194,7 +194,7 @@ function parseFlags(args: string[]): {
   return { positional, flags };
 }
 
-function requireToken(): { apiBase: string } {
+function getAuthenticatedSession(): { apiBase: string } {
   const session = loadSession();
   if (!session?.accessToken) {
     throw new Error('Not logged in. Run: ost-builder auth login github');
@@ -444,7 +444,7 @@ async function uploadFile(
 async function handleLibrary(args: string[]) {
   const sub = args[0];
   const { positional, flags } = parseFlags(args.slice(1));
-  const { apiBase } = requireToken();
+  const { apiBase } = getAuthenticatedSession();
   const cwd = process.cwd();
 
   if (sub === 'browse') {
