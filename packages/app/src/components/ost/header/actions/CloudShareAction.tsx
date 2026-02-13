@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { CloudUpload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useOSTStore } from '@/store/ostStore';
-import { createStoredShare, getAuthMe } from '@/lib/storedShareApi';
+import { createStoredShare, getAuthMe, updateStoredShare } from '@/lib/storedShareApi';
 import { toast } from '@/components/ui/use-toast';
 import {
   Dialog,
@@ -20,6 +20,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  findLocalSnapshotBySource,
+  getActiveLocalSnapshotSourceKey,
+  updateLocalSnapshot,
+} from '@/lib/localSnapshots';
 
 const CLOUD_SHARE_UI_TOGGLE_KEY = 'ost:feature:cloud-share';
 
@@ -27,6 +32,12 @@ function isCloudShareUiEnabled(): boolean {
   if (typeof window === 'undefined') return false;
   const raw = (window.localStorage.getItem(CLOUD_SHARE_UI_TOGGLE_KEY) || '').toLowerCase();
   return raw === '1' || raw === 'true' || raw === 'enabled' || raw === 'on';
+}
+
+function resolveCloudId(sourceKey: string | null, linkedCloudId?: string): string | null {
+  if (linkedCloudId) return linkedCloudId;
+  if (sourceKey?.startsWith('cloud:')) return sourceKey.slice('cloud:'.length);
+  return null;
 }
 
 export function CloudShareAction() {
@@ -71,15 +82,37 @@ export function CloudShareAction() {
     const payload = getSharePayload();
     setSubmitting(true);
     try {
-      const result = await createStoredShare({
-        markdown: payload.markdown,
-        name: payload.name,
-        visibility,
-        ttlDays,
-        settings: payload.settings,
-        collapsedIds: payload.collapsedIds,
-      });
-      await navigator.clipboard.writeText(result.link);
+      const activeSourceKey = getActiveLocalSnapshotSourceKey();
+      const snapshot = activeSourceKey ? findLocalSnapshotBySource(activeSourceKey) : null;
+      const cloudId = resolveCloudId(activeSourceKey, snapshot?.cloudShareId);
+
+      if (cloudId) {
+        await updateStoredShare(cloudId, {
+          markdown: payload.markdown,
+          name: payload.name,
+          visibility,
+          settings: payload.settings,
+          collapsedIds: payload.collapsedIds,
+        });
+        await navigator.clipboard.writeText(`${window.location.origin}/s/${cloudId}`);
+        if (snapshot) {
+          updateLocalSnapshot(snapshot.id, { cloudShareId: cloudId, syncedAt: Date.now() });
+        }
+      } else {
+        const result = await createStoredShare({
+          markdown: payload.markdown,
+          name: payload.name,
+          visibility,
+          ttlDays,
+          settings: payload.settings,
+          collapsedIds: payload.collapsedIds,
+        });
+        await navigator.clipboard.writeText(result.link);
+        if (snapshot) {
+          updateLocalSnapshot(snapshot.id, { cloudShareId: result.id, syncedAt: Date.now() });
+        }
+      }
+
       toast({
         title: 'Copied',
         description: 'Cloud share link created and copied.',
