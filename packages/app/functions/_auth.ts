@@ -18,6 +18,19 @@ type OAuthStatePayload = {
   iat: number;
 };
 
+type CliCodePayload = {
+  type: 'cli_code';
+  user: SessionUser;
+  exp: number;
+};
+
+type CliTokenPayload = {
+  type: 'cli_token';
+  user: SessionUser;
+  iat: number;
+  exp: number;
+};
+
 function getCookie(request: Request, key: string): string | null {
   const cookie = request.headers.get('cookie') || '';
   const prefix = `${key}=`;
@@ -144,6 +157,76 @@ export async function getSessionUser(
     email: payload.email,
     avatarUrl: payload.avatarUrl,
   };
+}
+
+function parseBearerToken(request: Request): string | null {
+  const auth = request.headers.get('authorization') || '';
+  if (!auth.toLowerCase().startsWith('bearer ')) return null;
+  return auth.slice(7).trim() || null;
+}
+
+async function verifySignedPayload<T extends { exp: number }>(
+  token: string,
+  secret: string,
+): Promise<T | null> {
+  const [encoded, signature] = token.split('.');
+  if (!encoded || !signature) return null;
+  const expected = await hmacSign(secret, encoded);
+  if (expected !== signature) return null;
+  const decoded = decodeStringFromUrlFragment(encoded);
+  if (!decoded) return null;
+  const payload = safeJsonParse<T>(decoded);
+  if (!payload) return null;
+  if (payload.exp <= Math.floor(Date.now() / 1000)) return null;
+  return payload;
+}
+
+export async function createCliAuthCode(user: SessionUser, secret: string): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  const payload: CliCodePayload = {
+    type: 'cli_code',
+    user,
+    exp: now + 180,
+  };
+  const encoded = encodeStringToUrlFragment(JSON.stringify(payload));
+  const signature = await hmacSign(secret, encoded);
+  return `${encoded}.${signature}`;
+}
+
+export async function consumeCliAuthCode(code: string, secret: string): Promise<SessionUser | null> {
+  const payload = await verifySignedPayload<CliCodePayload>(code, secret);
+  if (!payload || payload.type !== 'cli_code') return null;
+  return payload.user;
+}
+
+export async function createCliBearerToken(user: SessionUser, secret: string): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  const payload: CliTokenPayload = {
+    type: 'cli_token',
+    user,
+    iat: now,
+    exp: now + SESSION_TTL_SECONDS,
+  };
+  const encoded = encodeStringToUrlFragment(JSON.stringify(payload));
+  const signature = await hmacSign(secret, encoded);
+  return `${encoded}.${signature}`;
+}
+
+export async function getCliBearerUser(
+  request: Request,
+  secret: string,
+): Promise<SessionUser | null> {
+  const token = parseBearerToken(request);
+  if (!token) return null;
+  const payload = await verifySignedPayload<CliTokenPayload>(token, secret);
+  if (!payload || payload.type !== 'cli_token') return null;
+  return payload.user;
+}
+
+export async function getRequestUser(request: Request, secret: string): Promise<SessionUser | null> {
+  const bearer = await getCliBearerUser(request, secret);
+  if (bearer) return bearer;
+  return getSessionUser(request, secret);
 }
 
 export function jsonError(

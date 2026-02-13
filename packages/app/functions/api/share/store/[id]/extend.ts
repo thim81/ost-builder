@@ -1,4 +1,4 @@
-import { getSessionUser } from '../../../../_auth';
+import { getRequestUser } from '../../../../_auth';
 import { jsonResponse, methodNotAllowed, optionsResponse, safeJson } from '../../../../_http';
 import {
   ALLOWED_TTL_DAYS,
@@ -47,7 +47,7 @@ export async function onRequest(context: FunctionContext<{ id: string }>): Promi
 
   await ensureShareTable(env);
 
-  const user = await getSessionUser(request, env.AUTH_SESSION_SECRET);
+  const user = await getRequestUser(request, env.AUTH_SESSION_SECRET);
   if (!user) {
     return jsonResponse(request, { error: 'AUTH_REQUIRED' }, 401);
   }

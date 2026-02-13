@@ -4,9 +4,9 @@ A fast, markdown-first Opportunity Solution Tree (OST) builder for product teams
 
 ## Demo
 
-Live demo: [https://ost-builder.pages.dev](https://ost-builder.pages.dev)
+Live demo: [https://ost-builder.trinixlabs.dev](https://ost-builder.trinixlabs.dev)
 
-![OST Builder](https://ost-builder.pages.dev/screenshots/ost-builder-showcase.png)
+![OST Builder](https://ost-builder.trinixlabs.dev/screenshots/ost-builder-showcase.png)
 
 ## Features
 
@@ -30,6 +30,21 @@ Examples:
 - Generate a shareable link: `npx ost-builder ./my-tree.md --share`
 - Output Opportunity tree as JSON: `npx ost-builder ./my-tree.md --format json --pretty`
 - Output Opportunity tree as Markdown: `npx ost-builder ./my-tree.md --format markdown`
+
+Cloud Library examples:
+
+- Login with GitHub: `npx ost-builder auth login github`
+- Check auth session: `npx ost-builder auth status`
+- Browse cloud library (interactive): `npx ost-builder library browse`
+- Upload markdown to library: `npx ost-builder library upload ./my-tree.md`
+- Download by share id/url: `npx ost-builder library download <id-or-url> --out ./downloaded.md`
+- Reuse/create cloud link for an item: `npx ost-builder library share ./my-tree.md --copy`
+- Set access mode: `npx ost-builder library access <id-or-file> --anyone-with-link`
+
+Notes:
+
+- `library upload` defaults to `only-me` access unless explicitly overridden.
+- File-to-cloud mapping is stored in `.ost-library.json` in your current working directory.
 
 ## AI Skill for Claude and ChatGPT
 
