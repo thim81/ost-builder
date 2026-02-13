@@ -230,12 +230,12 @@ function mapAccessInput(value: string | boolean | undefined): ShareVisibility | 
 }
 
 function sanitizeFileName(value: string): string {
-  return (
-    (value || 'ost')
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '') || 'ost'
-  );
+  const cleaned = (value || 'ost')
+    .replace(/[<>:\"/\\|?*\u0000-\u001F]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!cleaned) return 'ost';
+  return cleaned;
 }
 
 async function tryCopyToClipboard(text: string): Promise<boolean> {
@@ -608,7 +608,9 @@ async function handleLibrary(args: string[]) {
     const id = parseShareId(input);
     const payload = await getShare(apiBase, id);
     const outArg =
-      typeof flags.out === 'string' ? flags.out : `${sanitizeFileName(payload.name || id)}.md`;
+      typeof flags.out === 'string'
+        ? flags.out
+        : `${sanitizeFileName(payload.name || `ost-${id}`)}.md`;
     const outPath = path.resolve(cwd, outArg);
     if (fs.existsSync(outPath) && !flags.force) {
       if (!process.stdout.isTTY) throw new Error(`File exists: ${outArg}. Use --force.`);
