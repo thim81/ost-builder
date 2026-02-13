@@ -43,10 +43,10 @@
   "homepage": "https://ost-builder.trinixlabs.dev/",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/trinixlabs/ost-builder.git"
+    "url": "git+https://github.com/thim81/ost-builder.git"
   },
   "bugs": {
-    "url": "https://github.com/trinixlabs/ost-builder/issues"
+    "url": "https://github.com/thim81/ost-builder/issues"
   },
   "publishConfig": {
     "access": "public"

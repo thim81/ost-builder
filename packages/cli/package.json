@@ -1,6 +1,6 @@
 {
   "name": "ost-builder",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": false,
   "description": "Opportunity Solution Tree Builder - Build and visualize Opportunity Solution Trees for product discovery.",
   "type": "module",
@@ -38,10 +38,10 @@
   "homepage": "https://ost-builder.trinixlabs.dev/",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/trinixlabs/ost-builder.git"
+    "url": "git+https://github.com/thim81/ost-builder.git"
   },
   "bugs": {
-    "url": "https://github.com/trinixlabs/ost-builder/issues"
+    "url": "https://github.com/thim81/ost-builder/issues"
   },
   "publishConfig": {
     "access": "public"
