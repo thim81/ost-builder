@@ -194,12 +194,12 @@ function parseFlags(args: string[]): {
   return { positional, flags };
 }
 
-function requireToken(): { apiBase: string; token: string } {
+function requireToken(): { apiBase: string } {
   const session = loadSession();
   if (!session?.accessToken) {
     throw new Error('Not logged in. Run: ost-builder auth login github');
   }
-  return { apiBase: resolveApiBase(session.apiBase), token: session.accessToken };
+  return { apiBase: resolveApiBase(session.apiBase) };
 }
 
 function extractTreeName(markdown: string): string {
@@ -338,7 +338,7 @@ async function authStatus(apiBase: string) {
   }
   const res = await apiFetch<{
     user: { sub: string; provider: 'github'; name?: string; email?: string } | null;
-  }>('/api/auth/me', { method: 'GET' }, { apiBase, token: session.accessToken });
+  }>('/api/auth/me', { method: 'GET' }, { apiBase });
   if (!res.user) {
     throw new Error('Not authenticated');
   }
@@ -348,31 +348,30 @@ async function authStatus(apiBase: string) {
 async function authLogout(apiBase: string) {
   const session = loadSession();
   if (session?.accessToken) {
-    await apiFetch('/api/auth/logout', { method: 'POST' }, { apiBase, token: session.accessToken });
+    await apiFetch('/api/auth/logout', { method: 'POST' }, { apiBase });
   }
   clearSession();
   console.log('Logged out');
 }
 
-async function listShares(apiBase: string, token: string, page: number, pageSize: number) {
+async function listShares(apiBase: string, page: number, pageSize: number) {
   return apiFetch<{ items: ShareItem[]; page: number; pageSize: number; total: number }>(
     `/api/share/store?page=${page}&pageSize=${pageSize}`,
     { method: 'GET' },
-    { apiBase, token },
+    { apiBase },
   );
 }
 
-async function getShare(apiBase: string, token: string, id: string) {
+async function getShare(apiBase: string, id: string) {
   return apiFetch<SharePayload>(
     `/api/share/store/${encodeURIComponent(id)}`,
     { method: 'GET' },
-    { apiBase, token },
+    { apiBase },
   );
 }
 
 async function uploadFile(
   apiBase: string,
-  token: string,
   cwd: string,
   file: string,
   options: {
@@ -397,21 +396,21 @@ async function uploadFile(
           method: 'PATCH',
           body: JSON.stringify({ markdown, name }),
         },
-        { apiBase, token },
+        { apiBase },
       );
 
       if (options.access) {
         await apiFetch(
           `/api/share/store/${encodeURIComponent(id)}`,
           { method: 'PATCH', body: JSON.stringify({ visibility: options.access }) },
-          { apiBase, token },
+          { apiBase },
         );
       }
       if (options.ttl) {
         await apiFetch(
           `/api/share/store/${encodeURIComponent(id)}/extend`,
           { method: 'POST', body: JSON.stringify({ ttlDays: options.ttl }) },
-          { apiBase, token },
+          { apiBase },
         );
       }
 
@@ -435,7 +434,7 @@ async function uploadFile(
         ttlDays: options.ttl || 30,
       }),
     },
-    { apiBase, token },
+    { apiBase },
   );
 
   upsertMappedId(cwd, apiBase, file, { id: created.id, lastUploadedAt: Date.now(), name });
@@ -445,13 +444,13 @@ async function uploadFile(
 async function handleLibrary(args: string[]) {
   const sub = args[0];
   const { positional, flags } = parseFlags(args.slice(1));
-  const { apiBase, token } = requireToken();
+  const { apiBase } = requireToken();
   const cwd = process.cwd();
 
   if (sub === 'browse') {
     const page = Number(flags.page || 1);
     const pageSize = Number(flags['page-size'] || 20);
-    const data = await listShares(apiBase, token, page, pageSize);
+    const data = await listShares(apiBase, page, pageSize);
     if (flags.json) {
       console.log(JSON.stringify(data, null, 2));
       return;
@@ -484,7 +483,7 @@ async function handleLibrary(args: string[]) {
     const id = selected.item.id;
 
     if (action.value === 'download') {
-      const payload = await getShare(apiBase, token, id);
+      const payload = await getShare(apiBase, id);
       const out = await promptText('Output file path (.md): ');
       if (!out) return;
       fs.writeFileSync(path.resolve(cwd, out), payload.markdown, 'utf8');
@@ -507,7 +506,7 @@ async function handleLibrary(args: string[]) {
     if (action.value === 'upload') {
       const local = await promptText('Local markdown file path: ');
       if (!local) return;
-      await uploadFile(apiBase, token, cwd, local, { id });
+      await uploadFile(apiBase, cwd, local, { id });
       console.log('Updated item from local markdown.');
       return;
     }
@@ -524,7 +523,7 @@ async function handleLibrary(args: string[]) {
           method: 'PATCH',
           body: JSON.stringify({ visibility: access.value }),
         },
-        { apiBase, token },
+        { apiBase },
       );
       console.log('Access updated.');
       return;
@@ -544,7 +543,7 @@ async function handleLibrary(args: string[]) {
           method: 'POST',
           body: JSON.stringify({ ttlDays: ttlChoice.value }),
         },
-        { apiBase, token },
+        { apiBase },
       );
       console.log('TTL updated.');
       return;
@@ -556,7 +555,7 @@ async function handleLibrary(args: string[]) {
       await apiFetch(
         `/api/share/store/${encodeURIComponent(id)}`,
         { method: 'DELETE' },
-        { apiBase, token },
+        { apiBase },
       );
       console.log('Deleted.');
     }
@@ -570,7 +569,7 @@ async function handleLibrary(args: string[]) {
     const ttl = flags.ttl ? Number(flags.ttl) : undefined;
     const id = typeof flags.id === 'string' ? flags.id : undefined;
     const name = typeof flags.name === 'string' ? flags.name : undefined;
-    const result = await uploadFile(apiBase, token, cwd, file, {
+    const result = await uploadFile(apiBase, cwd, file, {
       id,
       name,
       access: access || undefined,
@@ -592,7 +591,7 @@ async function handleLibrary(args: string[]) {
     if (!input)
       throw new Error('Usage: ost-builder library download <id|url> [--out <file.md>] [--force]');
     const id = parseShareId(input);
-    const payload = await getShare(apiBase, token, id);
+    const payload = await getShare(apiBase, id);
     const outArg =
       typeof flags.out === 'string' ? flags.out : `${sanitizeFileName(payload.name || id)}.md`;
     const outPath = path.resolve(cwd, outArg);
@@ -617,7 +616,7 @@ async function handleLibrary(args: string[]) {
     let id = parseShareId(input);
     const isFile = fs.existsSync(path.resolve(cwd, input));
     if (isFile) {
-      const result = await uploadFile(apiBase, token, cwd, input, {
+      const result = await uploadFile(apiBase, cwd, input, {
         access: flags.public ? 'public' : undefined,
       });
       id = result.id;
@@ -628,11 +627,11 @@ async function handleLibrary(args: string[]) {
           method: 'PATCH',
           body: JSON.stringify({ visibility: 'public' }),
         },
-        { apiBase, token },
+        { apiBase },
       );
     }
 
-    const payload = await getShare(apiBase, token, id);
+    const payload = await getShare(apiBase, id);
     if (payload.visibility === 'private' && !flags.public && process.stdout.isTTY && !flags.json) {
       const makePublic = await promptYesNo(
         'This link is only-me. Make it anyone-with-link?',
@@ -645,7 +644,7 @@ async function handleLibrary(args: string[]) {
             method: 'PATCH',
             body: JSON.stringify({ visibility: 'public' }),
           },
-          { apiBase, token },
+          { apiBase },
         );
       }
     }
@@ -681,7 +680,7 @@ async function handleLibrary(args: string[]) {
         method: 'PATCH',
         body: JSON.stringify({ visibility }),
       },
-      { apiBase, token },
+      { apiBase },
     );
 
     if (flags.json) console.log(JSON.stringify({ id, visibility }, null, 2));
