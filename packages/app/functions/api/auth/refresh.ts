@@ -1,14 +1,13 @@
 import {
-  consumeCliAuthCode,
   createCliBearerToken,
   createRefreshToken,
-  getSessionUser,
   jsonError,
+  verifyRefreshToken,
 } from '../../_auth';
 import { assertAuthEnv, isStoredShareEnabled, type FunctionContext } from '../../_env';
 import { safeJson } from '../../_http';
 
-type TokenBody = { code?: string };
+type RefreshBody = { refreshToken?: string };
 
 export async function onRequest(context: FunctionContext): Promise<Response> {
   const { request, env } = context;
@@ -28,28 +27,25 @@ export async function onRequest(context: FunctionContext): Promise<Response> {
     return jsonError(500, message);
   }
 
-  const body = await safeJson<TokenBody>(request);
-  let user = null;
+  const body = await safeJson<RefreshBody>(request);
+  const refreshToken = body?.refreshToken;
 
-  if (body?.code) {
-    user = await consumeCliAuthCode(body.code, env.AUTH_SESSION_SECRET);
-    if (!user) {
-      return jsonError(400, 'Invalid or expired code');
-    }
-  } else {
-    user = await getSessionUser(request, env.AUTH_SESSION_SECRET);
-    if (!user) {
-      return jsonError(401, 'AUTH_REQUIRED');
-    }
+  if (!refreshToken) {
+    return jsonError(400, 'Missing refreshToken');
   }
 
-  const accessToken = await createCliBearerToken(user, env.AUTH_SESSION_SECRET);
-  const refreshToken = await createRefreshToken(user, env.AUTH_SESSION_SECRET);
+  const user = await verifyRefreshToken(refreshToken, env.AUTH_SESSION_SECRET);
+  if (!user) {
+    return jsonError(401, 'Invalid or expired refresh token');
+  }
+
+  const newAccessToken = await createCliBearerToken(user, env.AUTH_SESSION_SECRET);
+  const newRefreshToken = await createRefreshToken(user, env.AUTH_SESSION_SECRET);
 
   return new Response(
     JSON.stringify({
-      accessToken,
-      refreshToken,
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
       tokenType: 'Bearer',
       expiresIn: 3600, // 1 hour in seconds
       user,

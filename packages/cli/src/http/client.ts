@@ -1,8 +1,9 @@
-import { loadSession } from '../config/session.js';
+import { loadSession, saveSession, type CliSession } from '../config/session.js';
 
 export type ApiClientOptions = {
   apiBase: string;
   token?: string;
+  autoRefresh?: boolean;
 };
 
 export function resolveApiBase(explicit?: string): string {
@@ -13,18 +14,79 @@ export function resolveApiBase(explicit?: string): string {
   return 'https://ost-builder.trinixlabs.dev';
 }
 
+async function refreshAccessToken(
+  apiBase: string,
+  refreshToken: string,
+): Promise<{
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+} | null> {
+  try {
+    const res = await fetch(`${apiBase}/api/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (!res.ok) return null;
+
+    const data = (await res.json()) as {
+      accessToken: string;
+      refreshToken: string;
+      expiresIn?: number;
+    };
+    return {
+      accessToken: data.accessToken,
+      refreshToken: data.refreshToken,
+      expiresIn: data.expiresIn || 3600,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function apiFetch<T>(
   path: string,
   init: RequestInit,
   options: ApiClientOptions,
 ): Promise<T> {
+  let token = options.token;
+
+  // Auto-refresh token if needed
+  if (options.autoRefresh !== false && !token) {
+    const session = loadSession();
+    if (session?.accessToken && session?.refreshToken && session?.expiresAt) {
+      const now = Date.now();
+      const bufferTime = 5 * 60 * 1000; // 5 minutes buffer
+
+      // If token expires soon or already expired, refresh it
+      if (session.expiresAt <= now + bufferTime) {
+        const refreshed = await refreshAccessToken(options.apiBase, session.refreshToken);
+        if (refreshed) {
+          const updatedSession: CliSession = {
+            ...session,
+            accessToken: refreshed.accessToken,
+            refreshToken: refreshed.refreshToken,
+            expiresAt: Date.now() + refreshed.expiresIn * 1000,
+            savedAt: Date.now(),
+          };
+          saveSession(updatedSession);
+          token = refreshed.accessToken;
+        }
+      } else {
+        token = session.accessToken;
+      }
+    }
+  }
+
   const url = `${options.apiBase}${path.startsWith('/') ? path : `/${path}`}`;
   const headers = new Headers(init.headers || {});
   if (!headers.has('Content-Type') && init.body) {
     headers.set('Content-Type', 'application/json');
   }
-  if (options.token) {
-    headers.set('Authorization', `Bearer ${options.token}`);
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
   }
 
   const res = await fetch(url, {

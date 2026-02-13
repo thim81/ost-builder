@@ -5,6 +5,8 @@ import os from 'node:os';
 export type CliSession = {
   apiBase: string;
   accessToken: string;
+  refreshToken?: string;
+  expiresAt?: number;
   user?: {
     sub: string;
     provider: 'github';

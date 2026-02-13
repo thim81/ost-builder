@@ -306,6 +306,8 @@ async function authLogin(apiBase: string) {
 
   const tokenRes = await apiFetch<{
     accessToken: string;
+    refreshToken: string;
+    expiresIn: number;
     user: { sub: string; provider: 'github'; name?: string; email?: string };
   }>(
     '/api/auth/token',
@@ -319,6 +321,8 @@ async function authLogin(apiBase: string) {
   saveSession({
     apiBase,
     accessToken: tokenRes.accessToken,
+    refreshToken: tokenRes.refreshToken,
+    expiresAt: Date.now() + tokenRes.expiresIn * 1000,
     user: tokenRes.user,
     savedAt: Date.now(),
   });

@@ -5,6 +5,8 @@ const SESSION_COOKIE = 'ost_session';
 const OAUTH_STATE_COOKIE = 'ost_oauth_state';
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
 const OAUTH_STATE_TTL_SECONDS = 60 * 10;
+const ACCESS_TOKEN_TTL_SECONDS = 60 * 60; // 1 hour
+const REFRESH_TOKEN_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
 
 type SessionPayload = SessionUser & {
   iat: number;
@@ -26,6 +28,13 @@ type CliCodePayload = {
 
 type CliTokenPayload = {
   type: 'cli_token';
+  user: SessionUser;
+  iat: number;
+  exp: number;
+};
+
+type RefreshTokenPayload = {
+  type: 'refresh_token';
   user: SessionUser;
   iat: number;
   exp: number;
@@ -208,11 +217,33 @@ export async function createCliBearerToken(user: SessionUser, secret: string): P
     type: 'cli_token',
     user,
     iat: now,
-    exp: now + SESSION_TTL_SECONDS,
+    exp: now + ACCESS_TOKEN_TTL_SECONDS,
   };
   const encoded = encodeStringToUrlFragment(JSON.stringify(payload));
   const signature = await hmacSign(secret, encoded);
   return `${encoded}.${signature}`;
+}
+
+export async function createRefreshToken(user: SessionUser, secret: string): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  const payload: RefreshTokenPayload = {
+    type: 'refresh_token',
+    user,
+    iat: now,
+    exp: now + REFRESH_TOKEN_TTL_SECONDS,
+  };
+  const encoded = encodeStringToUrlFragment(JSON.stringify(payload));
+  const signature = await hmacSign(secret, encoded);
+  return `${encoded}.${signature}`;
+}
+
+export async function verifyRefreshToken(
+  token: string,
+  secret: string,
+): Promise<SessionUser | null> {
+  const payload = await verifySignedPayload<RefreshTokenPayload>(token, secret);
+  if (!payload || payload.type !== 'refresh_token') return null;
+  return payload.user;
 }
 
 export async function getCliBearerUser(

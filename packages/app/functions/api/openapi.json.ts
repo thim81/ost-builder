@@ -81,11 +81,21 @@ function buildSpec(requestUrl: string) {
       },
       '/api/auth/token': {
         post: {
-          summary: 'Mint bearer token from session or one-time CLI code',
+          summary: 'Mint access and refresh tokens from session or one-time CLI code',
           responses: {
-            '200': { description: 'Bearer token issued' },
+            '200': { description: 'Access and refresh tokens issued' },
             '400': { description: 'Invalid code' },
             '401': { description: 'Authentication required' },
+          },
+        },
+      },
+      '/api/auth/refresh': {
+        post: {
+          summary: 'Refresh access token using refresh token',
+          responses: {
+            '200': { description: 'New access and refresh tokens issued' },
+            '400': { description: 'Missing refresh token' },
+            '401': { description: 'Invalid or expired refresh token' },
           },
         },
       },
