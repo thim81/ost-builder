@@ -499,8 +499,9 @@ async function handleLibrary(args: string[]) {
 
     if (action.value === 'download') {
       const payload = await getShare(apiBase, id);
-      const out = await promptText('Output file path (.md): ');
-      if (!out) return;
+      const defaultName = `${sanitizeFileName(payload.name || `ost-${id}`)}.md`;
+      const outInput = await promptText(`Output file path (.md) [${defaultName}]: `);
+      const out = outInput || defaultName;
       fs.writeFileSync(path.resolve(cwd, out), payload.markdown, 'utf8');
       console.log(`Saved ${out}`);
       return;
