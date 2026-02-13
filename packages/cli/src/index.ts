@@ -263,6 +263,17 @@ async function tryCopyToClipboard(text: string): Promise<boolean> {
 
 async function authLogin(apiBase: string) {
   const callback = await new Promise<{ code: string }>((resolve, reject) => {
+    let settled = false;
+    let timeout: ReturnType<typeof setTimeout> | null = null;
+
+    const cleanup = () => {
+      if (timeout) {
+        clearTimeout(timeout);
+        timeout = null;
+      }
+      server.close();
+    };
+
     const server = http.createServer((req, res) => {
       const url = new URL(req.url || '/', 'http://127.0.0.1');
       if (url.pathname !== '/callback') {
@@ -278,7 +289,9 @@ async function authLogin(apiBase: string) {
       }
       res.statusCode = 200;
       res.end('Login complete. You can close this tab and return to the terminal.');
-      server.close();
+      if (settled) return;
+      settled = true;
+      cleanup();
       resolve({ code });
     });
 
@@ -295,9 +308,11 @@ async function authLogin(apiBase: string) {
       openUrl(loginUrl);
     });
 
-    setTimeout(
+    timeout = setTimeout(
       () => {
-        server.close();
+        if (settled) return;
+        settled = true;
+        cleanup();
         reject(new Error('Login timed out waiting for callback'));
       },
       5 * 60 * 1000,
