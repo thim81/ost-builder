@@ -17,7 +17,7 @@ Live demo: [https://ost-builder.trinixlabs.dev](https://ost-builder.trinixlabs.d
 - Built‑in templates and examples
 - Horizontal or vertical layouts
 - Compact or full card density
-- Privacy-first local sharing (browser-only) with optional account-backed cloud sharing (TTL-limited)
+- Privacy - All data is stored only in your browser
 
 ## CLI
 
@@ -64,11 +64,6 @@ Many product managers are familiar with Opportunity Solution Trees through Teres
 The goal was to have a visual tool, something lightweight and fast, allowing PMs to focus on thinking about the Opportunities & Solutions instead of the formatting.
 
 With OST-builder, you can type Markdown or add Opportunities/Solutions directly, share it with teammates, and call it a day. And because it’s Markdown, it works great with AI assistants & LLMs like Claude or ChatGPT.
-
-## Share modes and privacy
-
-- Local share (default): URL hash fragment, no account required, data stays in URL/browser context.
-- Stored share (optional): sign in with GitHub, store markdown in Cloudflare KV with TTL (`1/7/30/90` days), and manage links from the app.
 
 This project is open‑source and free — my small way to give back to the PM community. Feedback is very welcome.
 
