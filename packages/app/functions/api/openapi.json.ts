@@ -79,45 +79,21 @@ function buildSpec(requestUrl: string) {
           },
         },
       },
+      '/api/auth/token': {
+        post: {
+          summary: 'Mint bearer token from session or one-time CLI code',
+          responses: {
+            '200': { description: 'Bearer token issued' },
+            '400': { description: 'Invalid code' },
+            '401': { description: 'Authentication required' },
+          },
+        },
+      },
       '/api/auth/cli/callback': {
         get: {
           summary: 'CLI OAuth callback bridge',
           responses: {
             '302': { description: 'Redirects to localhost callback with one-time code' },
-          },
-        },
-      },
-      '/api/auth/cli/start': {
-        post: {
-          summary: 'Initialize CLI OAuth flow',
-          responses: {
-            '200': { description: 'OAuth URL generated' },
-          },
-        },
-      },
-      '/api/auth/cli/token': {
-        post: {
-          summary: 'Exchange one-time CLI code for bearer token',
-          responses: {
-            '200': { description: 'Bearer token issued' },
-            '400': { description: 'Invalid or expired code' },
-          },
-        },
-      },
-      '/api/auth/cli/me': {
-        get: {
-          summary: 'Validate CLI bearer token',
-          responses: {
-            '200': { description: 'CLI user info' },
-            '401': { description: 'Authentication required' },
-          },
-        },
-      },
-      '/api/auth/cli/logout': {
-        post: {
-          summary: 'CLI logout endpoint',
-          responses: {
-            '200': { description: 'Logged out' },
           },
         },
       },

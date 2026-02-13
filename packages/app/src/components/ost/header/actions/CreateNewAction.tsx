@@ -52,7 +52,10 @@ export function CreateNewAction() {
               <button
                 type="button"
                 onClick={() => {
-                  createAndSave('# My Opportunity Solution Tree\n\n', 'My Opportunity Solution Tree');
+                  createAndSave(
+                    '# My Opportunity Solution Tree\n\n',
+                    'My Opportunity Solution Tree',
+                  );
                 }}
                 className="rounded-lg border border-border bg-background p-4 text-left transition-shadow hover:shadow-sm"
               >

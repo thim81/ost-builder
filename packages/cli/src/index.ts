@@ -131,7 +131,8 @@ function parseLegacyArgs(args: string[]): LegacyOptions {
         break;
       case '--format': {
         const value = args[i + 1];
-        if (!value || (value !== 'json' && value !== 'markdown')) throw new Error('Expected --format json or markdown.');
+        if (!value || (value !== 'json' && value !== 'markdown'))
+          throw new Error('Expected --format json or markdown.');
         options.format = value;
         options.formatExplicit = true;
         sawFlag = true;
@@ -168,7 +169,10 @@ function parseLegacyArgs(args: string[]): LegacyOptions {
   return options;
 }
 
-function parseFlags(args: string[]): { positional: string[]; flags: Record<string, string | boolean> } {
+function parseFlags(args: string[]): {
+  positional: string[];
+  flags: Record<string, string | boolean>;
+} {
   const positional: string[] = [];
   const flags: Record<string, string | boolean> = {};
   for (let i = 0; i < args.length; i += 1) {
@@ -226,7 +230,12 @@ function mapAccessInput(value: string | boolean | undefined): ShareVisibility | 
 }
 
 function sanitizeFileName(value: string): string {
-  return (value || 'ost').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'ost';
+  return (
+    (value || 'ost')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'ost'
+  );
 }
 
 async function tryCopyToClipboard(text: string): Promise<boolean> {
@@ -286,14 +295,20 @@ async function authLogin(apiBase: string) {
       openUrl(loginUrl);
     });
 
-    setTimeout(() => {
-      server.close();
-      reject(new Error('Login timed out waiting for callback'));
-    }, 5 * 60 * 1000);
+    setTimeout(
+      () => {
+        server.close();
+        reject(new Error('Login timed out waiting for callback'));
+      },
+      5 * 60 * 1000,
+    );
   });
 
-  const tokenRes = await apiFetch<{ accessToken: string; user: { sub: string; provider: 'github'; name?: string; email?: string } }>(
-    '/api/auth/cli/token',
+  const tokenRes = await apiFetch<{
+    accessToken: string;
+    user: { sub: string; provider: 'github'; name?: string; email?: string };
+  }>(
+    '/api/auth/token',
     {
       method: 'POST',
       body: JSON.stringify({ code: callback.code }),
@@ -317,18 +332,19 @@ async function authStatus(apiBase: string) {
     console.log('Not logged in');
     return;
   }
-  const res = await apiFetch<{ user: { sub: string; provider: 'github'; name?: string; email?: string } }>(
-    '/api/auth/cli/me',
-    { method: 'GET' },
-    { apiBase, token: session.accessToken },
-  );
+  const res = await apiFetch<{
+    user: { sub: string; provider: 'github'; name?: string; email?: string } | null;
+  }>('/api/auth/me', { method: 'GET' }, { apiBase, token: session.accessToken });
+  if (!res.user) {
+    throw new Error('Not authenticated');
+  }
   console.log(JSON.stringify(res.user, null, 2));
 }
 
 async function authLogout(apiBase: string) {
   const session = loadSession();
   if (session?.accessToken) {
-    await apiFetch('/api/auth/cli/logout', { method: 'POST' }, { apiBase, token: session.accessToken });
+    await apiFetch('/api/auth/logout', { method: 'POST' }, { apiBase, token: session.accessToken });
   }
   clearSession();
   console.log('Logged out');
@@ -343,7 +359,11 @@ async function listShares(apiBase: string, token: string, page: number, pageSize
 }
 
 async function getShare(apiBase: string, token: string, id: string) {
-  return apiFetch<SharePayload>(`/api/share/store/${encodeURIComponent(id)}`, { method: 'GET' }, { apiBase, token });
+  return apiFetch<SharePayload>(
+    `/api/share/store/${encodeURIComponent(id)}`,
+    { method: 'GET' },
+    { apiBase, token },
+  );
 }
 
 async function uploadFile(
@@ -494,10 +514,14 @@ async function handleLibrary(args: string[]) {
         { label: 'Anyone with link', value: 'public' as const },
       ]);
       if (!access) return;
-      await apiFetch(`/api/share/store/${encodeURIComponent(id)}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ visibility: access.value }),
-      }, { apiBase, token });
+      await apiFetch(
+        `/api/share/store/${encodeURIComponent(id)}`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify({ visibility: access.value }),
+        },
+        { apiBase, token },
+      );
       console.log('Access updated.');
       return;
     }
@@ -510,10 +534,14 @@ async function handleLibrary(args: string[]) {
         { label: '90 days', value: 90 },
       ]);
       if (!ttlChoice) return;
-      await apiFetch(`/api/share/store/${encodeURIComponent(id)}/extend`, {
-        method: 'POST',
-        body: JSON.stringify({ ttlDays: ttlChoice.value }),
-      }, { apiBase, token });
+      await apiFetch(
+        `/api/share/store/${encodeURIComponent(id)}/extend`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ ttlDays: ttlChoice.value }),
+        },
+        { apiBase, token },
+      );
       console.log('TTL updated.');
       return;
     }
@@ -521,7 +549,11 @@ async function handleLibrary(args: string[]) {
     if (action.value === 'delete') {
       const ok = await promptYesNo('Delete this item?', false);
       if (!ok) return;
-      await apiFetch(`/api/share/store/${encodeURIComponent(id)}`, { method: 'DELETE' }, { apiBase, token });
+      await apiFetch(
+        `/api/share/store/${encodeURIComponent(id)}`,
+        { method: 'DELETE' },
+        { apiBase, token },
+      );
       console.log('Deleted.');
     }
     return;
@@ -534,11 +566,18 @@ async function handleLibrary(args: string[]) {
     const ttl = flags.ttl ? Number(flags.ttl) : undefined;
     const id = typeof flags.id === 'string' ? flags.id : undefined;
     const name = typeof flags.name === 'string' ? flags.name : undefined;
-    const result = await uploadFile(apiBase, token, cwd, file, { id, name, access: access || undefined, ttl });
+    const result = await uploadFile(apiBase, token, cwd, file, {
+      id,
+      name,
+      access: access || undefined,
+      ttl,
+    });
     if (flags.json) {
       console.log(JSON.stringify(result, null, 2));
     } else {
-      console.log(result.created ? `Created cloud item: ${result.id}` : `Updated cloud item: ${result.id}`);
+      console.log(
+        result.created ? `Created cloud item: ${result.id}` : `Updated cloud item: ${result.id}`,
+      );
       if (result.link) console.log(result.link);
     }
     return;
@@ -546,10 +585,12 @@ async function handleLibrary(args: string[]) {
 
   if (sub === 'download') {
     const input = positional[0];
-    if (!input) throw new Error('Usage: ost-builder library download <id|url> [--out <file.md>] [--force]');
+    if (!input)
+      throw new Error('Usage: ost-builder library download <id|url> [--out <file.md>] [--force]');
     const id = parseShareId(input);
     const payload = await getShare(apiBase, token, id);
-    const outArg = typeof flags.out === 'string' ? flags.out : `${sanitizeFileName(payload.name || id)}.md`;
+    const outArg =
+      typeof flags.out === 'string' ? flags.out : `${sanitizeFileName(payload.name || id)}.md`;
     const outPath = path.resolve(cwd, outArg);
     if (fs.existsSync(outPath) && !flags.force) {
       if (!process.stdout.isTTY) throw new Error(`File exists: ${outArg}. Use --force.`);
@@ -567,7 +608,8 @@ async function handleLibrary(args: string[]) {
 
   if (sub === 'share') {
     const input = positional[0];
-    if (!input) throw new Error('Usage: ost-builder library share <id|file.md> [--copy] [--open] [--public]');
+    if (!input)
+      throw new Error('Usage: ost-builder library share <id|file.md> [--copy] [--open] [--public]');
     let id = parseShareId(input);
     const isFile = fs.existsSync(path.resolve(cwd, input));
     if (isFile) {
@@ -576,20 +618,31 @@ async function handleLibrary(args: string[]) {
       });
       id = result.id;
     } else if (flags.public) {
-      await apiFetch(`/api/share/store/${encodeURIComponent(id)}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ visibility: 'public' }),
-      }, { apiBase, token });
+      await apiFetch(
+        `/api/share/store/${encodeURIComponent(id)}`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify({ visibility: 'public' }),
+        },
+        { apiBase, token },
+      );
     }
 
     const payload = await getShare(apiBase, token, id);
     if (payload.visibility === 'private' && !flags.public && process.stdout.isTTY && !flags.json) {
-      const makePublic = await promptYesNo('This link is only-me. Make it anyone-with-link?', false);
+      const makePublic = await promptYesNo(
+        'This link is only-me. Make it anyone-with-link?',
+        false,
+      );
       if (makePublic) {
-        await apiFetch(`/api/share/store/${encodeURIComponent(id)}`, {
-          method: 'PATCH',
-          body: JSON.stringify({ visibility: 'public' }),
-        }, { apiBase, token });
+        await apiFetch(
+          `/api/share/store/${encodeURIComponent(id)}`,
+          {
+            method: 'PATCH',
+            body: JSON.stringify({ visibility: 'public' }),
+          },
+          { apiBase, token },
+        );
       }
     }
 
@@ -603,7 +656,10 @@ async function handleLibrary(args: string[]) {
 
   if (sub === 'access') {
     const input = positional[0];
-    if (!input) throw new Error('Usage: ost-builder library access <id|file.md> --only-me|--anyone-with-link');
+    if (!input)
+      throw new Error(
+        'Usage: ost-builder library access <id|file.md> --only-me|--anyone-with-link',
+      );
     let id = parseShareId(input);
     const isFile = fs.existsSync(path.resolve(cwd, input));
     if (isFile) {
@@ -615,10 +671,14 @@ async function handleLibrary(args: string[]) {
     const visibility = flags['only-me'] ? 'private' : flags['anyone-with-link'] ? 'public' : null;
     if (!visibility) throw new Error('Specify exactly one: --only-me or --anyone-with-link');
 
-    await apiFetch(`/api/share/store/${encodeURIComponent(id)}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ visibility }),
-    }, { apiBase, token });
+    await apiFetch(
+      `/api/share/store/${encodeURIComponent(id)}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ visibility }),
+      },
+      { apiBase, token },
+    );
 
     if (flags.json) console.log(JSON.stringify({ id, visibility }, null, 2));
     else console.log(`Access updated: ${visibility}`);
@@ -631,7 +691,9 @@ async function handleLibrary(args: string[]) {
 async function handleAuth(args: string[]) {
   const sub = args[0];
   const { flags, positional } = parseFlags(args.slice(1));
-  const apiBase = resolveApiBase(typeof flags['api-base'] === 'string' ? flags['api-base'] : undefined);
+  const apiBase = resolveApiBase(
+    typeof flags['api-base'] === 'string' ? flags['api-base'] : undefined,
+  );
 
   if (sub === 'login') {
     const provider = positional[0] || 'github';
@@ -666,7 +728,8 @@ async function runLegacy(args: string[]) {
 
   if (options.name) tree.name = options.name;
 
-  const shouldPrint = !(options.share && options.format === 'json') && !(options.show && !options.formatExplicit);
+  const shouldPrint =
+    !(options.share && options.format === 'json') && !(options.show && !options.formatExplicit);
   if (shouldPrint) {
     if (options.format === 'markdown') console.log(currentMarkdown);
     else console.log(formatTreeAsJson(tree, options.pretty));
@@ -675,7 +738,9 @@ async function runLegacy(args: string[]) {
   if (options.share) {
     const base = options.shareBase.replace(/#.*$/, '');
     const shareMarkdown =
-      options.format === 'markdown' ? currentMarkdown : serializeTreeToMarkdown(tree, options.name || tree.name);
+      options.format === 'markdown'
+        ? currentMarkdown
+        : serializeTreeToMarkdown(tree, options.name || tree.name);
     const fragment = encodeMarkdownToUrlFragment(shareMarkdown, options.name || tree.name);
     const shareLink = `${base.replace(/\/?$/, '/')}#${fragment}`;
     if (options.show) {

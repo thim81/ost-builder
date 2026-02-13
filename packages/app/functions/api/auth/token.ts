@@ -1,6 +1,6 @@
-import { consumeCliAuthCode, createCliBearerToken, jsonError } from '../../../_auth';
-import { assertAuthEnv, isStoredShareEnabled, type FunctionContext } from '../../../_env';
-import { safeJson } from '../../../_http';
+import { consumeCliAuthCode, createCliBearerToken, getSessionUser, jsonError } from '../../_auth';
+import { assertAuthEnv, isStoredShareEnabled, type FunctionContext } from '../../_env';
+import { safeJson } from '../../_http';
 
 type TokenBody = { code?: string };
 
@@ -23,14 +23,18 @@ export async function onRequest(context: FunctionContext): Promise<Response> {
   }
 
   const body = await safeJson<TokenBody>(request);
-  const code = body?.code;
-  if (!code) {
-    return jsonError(400, 'Missing code');
-  }
+  let user = null;
 
-  const user = await consumeCliAuthCode(code, env.AUTH_SESSION_SECRET);
-  if (!user) {
-    return jsonError(400, 'Invalid or expired code');
+  if (body?.code) {
+    user = await consumeCliAuthCode(body.code, env.AUTH_SESSION_SECRET);
+    if (!user) {
+      return jsonError(400, 'Invalid or expired code');
+    }
+  } else {
+    user = await getSessionUser(request, env.AUTH_SESSION_SECRET);
+    if (!user) {
+      return jsonError(401, 'AUTH_REQUIRED');
+    }
   }
 
   const accessToken = await createCliBearerToken(user, env.AUTH_SESSION_SECRET);

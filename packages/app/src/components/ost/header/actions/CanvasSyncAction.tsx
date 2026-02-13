@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Cloud } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { createStoredShare, getAuthMe, getStoredShare, updateStoredShare } from '@/lib/storedShareApi';
+import {
+  createStoredShare,
+  getAuthMe,
+  getStoredShare,
+  updateStoredShare,
+} from '@/lib/storedShareApi';
 import {
   buildSnapshotPayloadHash,
   findLocalSnapshotBySource,

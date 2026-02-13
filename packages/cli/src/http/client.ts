@@ -35,7 +35,10 @@ export async function apiFetch<T>(
   const payload = (await res.json().catch(() => ({}))) as Record<string, unknown>;
   if (!res.ok) {
     const message = (payload.error as string) || `Request failed: ${res.status}`;
-    const error = new Error(message) as Error & { status?: number; payload?: Record<string, unknown> };
+    const error = new Error(message) as Error & {
+      status?: number;
+      payload?: Record<string, unknown>;
+    };
     error.status = res.status;
     error.payload = payload;
     throw error;

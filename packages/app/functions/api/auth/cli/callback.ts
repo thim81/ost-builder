@@ -37,8 +37,16 @@ export async function onRequest(context: FunctionContext): Promise<Response> {
     return jsonError(400, 'Invalid redirectUri');
   }
 
-  if (target.protocol !== 'http:' || (target.hostname !== '127.0.0.1' && target.hostname !== 'localhost')) {
+  if (
+    target.protocol !== 'http:' ||
+    (target.hostname !== '127.0.0.1' && target.hostname !== 'localhost')
+  ) {
     return jsonError(400, 'Invalid redirectUri host');
+  }
+
+  const port = parseInt(target.port || '80', 10);
+  if (port < 1024 || port > 65535) {
+    return jsonError(400, 'Invalid redirectUri port');
   }
 
   const code = await createCliAuthCode(user, env.AUTH_SESSION_SECRET);

@@ -193,7 +193,10 @@ export async function createCliAuthCode(user: SessionUser, secret: string): Prom
   return `${encoded}.${signature}`;
 }
 
-export async function consumeCliAuthCode(code: string, secret: string): Promise<SessionUser | null> {
+export async function consumeCliAuthCode(
+  code: string,
+  secret: string,
+): Promise<SessionUser | null> {
   const payload = await verifySignedPayload<CliCodePayload>(code, secret);
   if (!payload || payload.type !== 'cli_code') return null;
   return payload.user;
@@ -223,7 +226,10 @@ export async function getCliBearerUser(
   return payload.user;
 }
 
-export async function getRequestUser(request: Request, secret: string): Promise<SessionUser | null> {
+export async function getRequestUser(
+  request: Request,
+  secret: string,
+): Promise<SessionUser | null> {
   const bearer = await getCliBearerUser(request, secret);
   if (bearer) return bearer;
   return getSessionUser(request, secret);

@@ -49,7 +49,13 @@ import {
 } from '@/lib/localSnapshots';
 import { toast } from '@/components/ui/use-toast';
 import { useOSTStore } from '@/store/ostStore';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const CLOUD_SHARE_UI_TOGGLE_KEY = 'ost:feature:cloud-share';
 const DEFAULT_PROJECT_NAME = 'My Opportunity Solution Tree';
@@ -108,10 +114,22 @@ function getCloudId(item: LocalSnapshot): string | null {
 
 function cloudStateBadge(state?: CloudSyncState): { label: string; className: string } | null {
   if (!state) return null;
-  if (state === 'in-sync') return { label: 'In sync', className: 'bg-emerald-500/15 text-emerald-700 border-emerald-400/40' };
-  if (state === 'local-ahead') return { label: 'Local ahead', className: 'bg-amber-500/15 text-amber-700 border-amber-400/40' };
-  if (state === 'cloud-ahead') return { label: 'Cloud ahead', className: 'bg-sky-500/15 text-sky-700 border-sky-400/40' };
-  return { label: 'Cloud state unknown', className: 'bg-muted text-muted-foreground border-border' };
+  if (state === 'in-sync')
+    return {
+      label: 'In sync',
+      className: 'bg-emerald-500/15 text-emerald-700 border-emerald-400/40',
+    };
+  if (state === 'local-ahead')
+    return {
+      label: 'Local ahead',
+      className: 'bg-amber-500/15 text-amber-700 border-amber-400/40',
+    };
+  if (state === 'cloud-ahead')
+    return { label: 'Cloud ahead', className: 'bg-sky-500/15 text-sky-700 border-sky-400/40' };
+  return {
+    label: 'Cloud state unknown',
+    className: 'bg-muted text-muted-foreground border-border',
+  };
 }
 
 function EditInBuilderIcon({ className }: { className?: string }) {
@@ -152,7 +170,9 @@ export default function Library() {
   const [syncing, setSyncing] = useState(false);
   const [syncingItemId, setSyncingItemId] = useState<string | null>(null);
   const [cloudStateByItemId, setCloudStateByItemId] = useState<Record<string, CloudSyncState>>({});
-  const [cloudVisibilityByItemId, setCloudVisibilityByItemId] = useState<Record<string, ShareVisibility>>({});
+  const [cloudVisibilityByItemId, setCloudVisibilityByItemId] = useState<
+    Record<string, ShareVisibility>
+  >({});
   const [cloudTtlByItemId, setCloudTtlByItemId] = useState<Record<string, TtlOption>>({});
 
   const syncAvailable = cloudToggleEnabled && cloudFeatureEnabled;
@@ -553,7 +573,9 @@ export default function Library() {
                 Cloud Sync
               </div>
               <div className="text-xs text-muted-foreground">
-                {cloudUser ? `Signed in as ${cloudUser.name || 'user'} · ${syncCountLabel}` : 'Sign in to sync your local Library to cloud.'}
+                {cloudUser
+                  ? `Signed in as ${cloudUser.name || 'user'} · ${syncCountLabel}`
+                  : 'Sign in to sync your local Library to cloud.'}
               </div>
             </div>
             <Button onClick={() => void syncNow()} disabled={syncing}>
@@ -590,204 +612,215 @@ export default function Library() {
             {items.map((item) => {
               const isActiveItem = !!item.sourceKey && item.sourceKey === activeSourceKey;
               return (
-                <div key={item.id} className="rounded-md border border-border bg-card p-4 space-y-3">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <div className="font-medium">{item.name}</div>
-                    <Badge variant="outline" className={sourceBadgeClass(isActiveItem)}>
-                      {localSourceLabel(item.sourceType, isActiveItem)}
-                    </Badge>
-                    {cloudVisibilityByItemId[item.id] === 'public' ? (
-                      <Badge variant="secondary">Shared</Badge>
-                    ) : null}
-                    {(() => {
-                      const cloudBadge = cloudStateBadge(cloudStateByItemId[item.id]);
-                      if (!cloudBadge) return null;
-                      return (
-                        <Badge variant="outline" className={cloudBadge.className}>
-                          {cloudBadge.label}
-                        </Badge>
-                      );
-                    })()}
+                <div
+                  key={item.id}
+                  className="rounded-md border border-border bg-card p-4 space-y-3"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="font-medium">{item.name}</div>
+                      <Badge variant="outline" className={sourceBadgeClass(isActiveItem)}>
+                        {localSourceLabel(item.sourceType, isActiveItem)}
+                      </Badge>
+                      {cloudVisibilityByItemId[item.id] === 'public' ? (
+                        <Badge variant="secondary">Shared</Badge>
+                      ) : null}
+                      {(() => {
+                        const cloudBadge = cloudStateBadge(cloudStateByItemId[item.id]);
+                        if (!cloudBadge) return null;
+                        return (
+                          <Badge variant="outline" className={cloudBadge.className}>
+                            {cloudBadge.label}
+                          </Badge>
+                        );
+                      })()}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" variant="outline" onClick={() => beginRenameLocal(item)}>
+                        <Pencil className="w-4 h-4 mr-2" />
+                        Rename
+                      </Button>
+                      <Button
+                        size="icon"
+                        className="h-8 w-8"
+                        variant="destructive"
+                        title="Delete"
+                        onClick={() => setPendingDeleteItem(item)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button size="sm" variant="outline" onClick={() => beginRenameLocal(item)}>
-                      <Pencil className="w-4 h-4 mr-2" />
-                      Rename
-                    </Button>
-                    <Button
-                      size="icon"
-                      className="h-8 w-8"
-                      variant="destructive"
-                      title="Delete"
-                      onClick={() => setPendingDeleteItem(item)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
 
-                <div className="text-xs text-muted-foreground">
-                  Updated: {new Date(item.updatedAt).toLocaleString()}
-                </div>
-                {item.lastOpenedAt ? (
                   <div className="text-xs text-muted-foreground">
-                    Last opened from share: {new Date(item.lastOpenedAt).toLocaleString()}
+                    Updated: {new Date(item.updatedAt).toLocaleString()}
                   </div>
-                ) : null}
-                {syncAvailable && cloudUser ? (
-                  <div className="rounded-md border border-border bg-muted/30 p-2 flex flex-wrap gap-2 items-center">
-                    <Select
-                      value={cloudVisibilityByItemId[item.id] || 'private'}
-                      onValueChange={(value) =>
-                        void updateItemVisibility(item, value as ShareVisibility)
-                      }
-                    >
-                      <SelectTrigger className="w-[180px] h-8">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="private">Only me</SelectItem>
-                        <SelectItem value="public">Anyone with link</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Select
-                      value={String(cloudTtlByItemId[item.id] || 30)}
-                      onValueChange={(value) =>
-                        setCloudTtlByItemId((prev) => ({
-                          ...prev,
-                          [item.id]: Number(value) as TtlOption,
-                        }))
-                      }
-                    >
-                      <SelectTrigger className="w-[140px] h-8">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1">1 day</SelectItem>
-                        <SelectItem value="7">7 days</SelectItem>
-                        <SelectItem value="30">30 days</SelectItem>
-                        <SelectItem value="90">90 days</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button
-                      size="sm"
-                      onClick={() => void syncSingleItem(item)}
-                      disabled={syncingItemId === item.id || syncing}
-                    >
-                      {syncingItemId === item.id ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Syncing...
-                        </>
-                      ) : (
-                        <>
-                          <Cloud className="w-4 h-4 mr-2" />
-                          Sync this item
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => void createOrCopyCloudLink(item)}
-                      disabled={syncingItemId === item.id || syncing}
-                    >
-                      <Share2 className="w-4 h-4 mr-2" />
-                      Cloud link
-                    </Button>
-                  </div>
-                ) : null}
-
-                {editingId === item.id ? (
-                  <div className="flex gap-2">
-                    <Input value={nameDraft} onChange={(e) => setNameDraft(e.target.value)} />
-                    <Button size="sm" onClick={() => saveLocalRename(item.id)}>
-                      Save
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>
-                      Cancel
-                    </Button>
-                  </div>
-                ) : editingContentId === item.id ? (
-                  <div className="space-y-2">
-                    <Textarea
-                      value={contentDraft}
-                      onChange={(e) => setContentDraft(e.target.value)}
-                      className="font-mono min-h-48"
-                    />
-                    <div className="flex gap-2">
-                      <Button size="sm" onClick={() => saveContent(item.id)}>
-                        Save content
+                  {item.lastOpenedAt ? (
+                    <div className="text-xs text-muted-foreground">
+                      Last opened from share: {new Date(item.lastOpenedAt).toLocaleString()}
+                    </div>
+                  ) : null}
+                  {syncAvailable && cloudUser ? (
+                    <div className="rounded-md border border-border bg-muted/30 p-2 flex flex-wrap gap-2 items-center">
+                      <Select
+                        value={cloudVisibilityByItemId[item.id] || 'private'}
+                        onValueChange={(value) =>
+                          void updateItemVisibility(item, value as ShareVisibility)
+                        }
+                      >
+                        <SelectTrigger className="w-[180px] h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="private">Only me</SelectItem>
+                          <SelectItem value="public">Anyone with link</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Select
+                        value={String(cloudTtlByItemId[item.id] || 30)}
+                        onValueChange={(value) =>
+                          setCloudTtlByItemId((prev) => ({
+                            ...prev,
+                            [item.id]: Number(value) as TtlOption,
+                          }))
+                        }
+                      >
+                        <SelectTrigger className="w-[140px] h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 day</SelectItem>
+                          <SelectItem value="7">7 days</SelectItem>
+                          <SelectItem value="30">30 days</SelectItem>
+                          <SelectItem value="90">90 days</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        size="sm"
+                        onClick={() => void syncSingleItem(item)}
+                        disabled={syncingItemId === item.id || syncing}
+                      >
+                        {syncingItemId === item.id ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Syncing...
+                          </>
+                        ) : (
+                          <>
+                            <Cloud className="w-4 h-4 mr-2" />
+                            Sync this item
+                          </>
+                        )}
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => {
-                          setEditingContentId(null);
-                          setContentDraft('');
-                        }}
+                        onClick={() => void createOrCopyCloudLink(item)}
+                        disabled={syncingItemId === item.id || syncing}
                       >
+                        <Share2 className="w-4 h-4 mr-2" />
+                        Cloud link
+                      </Button>
+                    </div>
+                  ) : null}
+
+                  {editingId === item.id ? (
+                    <div className="flex gap-2">
+                      <Input value={nameDraft} onChange={(e) => setNameDraft(e.target.value)} />
+                      <Button size="sm" onClick={() => saveLocalRename(item.id)}>
+                        Save
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>
                         Cancel
                       </Button>
                     </div>
-                  </div>
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        if (isActiveItem) {
-                          openLocalSnapshot(item);
-                          return;
-                        }
-                        setPendingLoadItem(item);
-                      }}
-                    >
-                      <EditInBuilderIcon className="w-4 h-4 mr-2" />
-                      {isActiveItem ? 'Edit in builder' : 'Load in builder'}
-                    </Button>
-                    {isActiveItem ? (
-                      <Button size="sm" variant="outline" onClick={() => beginEditContent(item)}>
-                        <Edit3 className="w-4 h-4 mr-2" />
-                        Edit Markdown
+                  ) : editingContentId === item.id ? (
+                    <div className="space-y-2">
+                      <Textarea
+                        value={contentDraft}
+                        onChange={(e) => setContentDraft(e.target.value)}
+                        className="font-mono min-h-48"
+                      />
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={() => saveContent(item.id)}>
+                          Save content
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setEditingContentId(null);
+                            setContentDraft('');
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          if (isActiveItem) {
+                            openLocalSnapshot(item);
+                            return;
+                          }
+                          setPendingLoadItem(item);
+                        }}
+                      >
+                        <EditInBuilderIcon className="w-4 h-4 mr-2" />
+                        {isActiveItem ? 'Edit in builder' : 'Load in builder'}
                       </Button>
-                    ) : null}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => void handleCopy(item.markdown, 'Markdown copied.')}
-                    >
-                      <Copy className="w-4 h-4 mr-2" />
-                      Copy markdown
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => downloadAsMarkdown(item)}>
-                      <FileDown className="w-4 h-4 mr-2" />
-                      Download Markdown
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => duplicateItem(item)}>
-                      <Copy className="w-4 h-4 mr-2" />
-                      Duplicate OST
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => void copyLocalShareLink(item)}>
-                      <Share2 className="w-4 h-4 mr-2" />
-                      Share
-                    </Button>
-                  </div>
-                )}
+                      {isActiveItem ? (
+                        <Button size="sm" variant="outline" onClick={() => beginEditContent(item)}>
+                          <Edit3 className="w-4 h-4 mr-2" />
+                          Edit Markdown
+                        </Button>
+                      ) : null}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => void handleCopy(item.markdown, 'Markdown copied.')}
+                      >
+                        <Copy className="w-4 h-4 mr-2" />
+                        Copy markdown
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => downloadAsMarkdown(item)}>
+                        <FileDown className="w-4 h-4 mr-2" />
+                        Download Markdown
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => duplicateItem(item)}>
+                        <Copy className="w-4 h-4 mr-2" />
+                        Duplicate OST
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => void copyLocalShareLink(item)}
+                      >
+                        <Share2 className="w-4 h-4 mr-2" />
+                        Share
+                      </Button>
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
         )}
       </div>
-      <AlertDialog open={!!pendingLoadItem} onOpenChange={(open) => !open && setPendingLoadItem(null)}>
+      <AlertDialog
+        open={!!pendingLoadItem}
+        onOpenChange={(open) => !open && setPendingLoadItem(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Load in builder?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will replace the current builder view with "{pendingLoadItem?.name || 'this item'}".
+              This will replace the current builder view with "
+              {pendingLoadItem?.name || 'this item'}".
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -805,7 +838,10 @@ export default function Library() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <AlertDialog open={!!pendingDeleteItem} onOpenChange={(open) => !open && setPendingDeleteItem(null)}>
+      <AlertDialog
+        open={!!pendingDeleteItem}
+        onOpenChange={(open) => !open && setPendingDeleteItem(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete library item?</AlertDialogTitle>
