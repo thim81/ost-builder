@@ -13,7 +13,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const CLOUD_SHARE_UI_TOGGLE_KEY = 'ost:feature:cloud-share';
 
@@ -123,7 +129,10 @@ export function CloudShareAction() {
           </div>
           <div className="space-y-1">
             <label className="text-xs font-medium text-muted-foreground">Expires in</label>
-            <Select value={String(ttlDays)} onValueChange={(value) => setTtlDays(Number(value) as 1 | 7 | 30 | 90)}>
+            <Select
+              value={String(ttlDays)}
+              onValueChange={(value) => setTtlDays(Number(value) as 1 | 7 | 30 | 90)}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>

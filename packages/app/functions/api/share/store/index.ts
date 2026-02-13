@@ -1,4 +1,4 @@
-import { getSessionUser } from '../../../_auth';
+import { getRequestUser } from '../../../_auth';
 import { jsonResponse, methodNotAllowed, optionsResponse, safeJson } from '../../../_http';
 import { checkRateLimit } from '../../../_rateLimit';
 import {
@@ -52,7 +52,7 @@ export async function onRequest(context: FunctionContext): Promise<Response> {
   await ensureShareTable(env);
 
   if (request.method === 'POST') {
-    const user = await getSessionUser(request, env.AUTH_SESSION_SECRET);
+    const user = await getRequestUser(request, env.AUTH_SESSION_SECRET);
     if (!user) {
       return jsonResponse(request, { error: 'AUTH_REQUIRED' }, 401);
     }
@@ -116,7 +116,7 @@ export async function onRequest(context: FunctionContext): Promise<Response> {
   }
 
   if (request.method === 'GET') {
-    const user = await getSessionUser(request, env.AUTH_SESSION_SECRET);
+    const user = await getRequestUser(request, env.AUTH_SESSION_SECRET);
     if (!user) {
       return jsonResponse(request, { error: 'AUTH_REQUIRED' }, 401);
     }

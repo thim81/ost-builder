@@ -1,4 +1,4 @@
-import { getSessionUser } from '../../../_auth';
+import { getRequestUser } from '../../../_auth';
 import { jsonResponse, methodNotAllowed, optionsResponse, safeJson } from '../../../_http';
 import { checkRateLimit, clientIpFromRequest } from '../../../_rateLimit';
 import {
@@ -75,7 +75,7 @@ export async function onRequest(context: FunctionContext<{ id: string }>): Promi
       return jsonResponse(request, { error: 'Rate limit exceeded' }, 429);
     }
 
-    const user = await getSessionUser(request, env.AUTH_SESSION_SECRET);
+    const user = await getRequestUser(request, env.AUTH_SESSION_SECRET);
     const isOwner = !!user && user.sub === share.owner_sub;
 
     if (share.visibility === 'private' && !isOwner) {
@@ -111,7 +111,7 @@ export async function onRequest(context: FunctionContext<{ id: string }>): Promi
     });
   }
 
-  const user = await getSessionUser(request, env.AUTH_SESSION_SECRET);
+  const user = await getRequestUser(request, env.AUTH_SESSION_SECRET);
   if (!user) {
     return jsonResponse(request, { error: 'AUTH_REQUIRED' }, 401);
   }

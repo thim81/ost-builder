@@ -4,9 +4,9 @@ A fast, markdown-first Opportunity Solution Tree (OST) builder for product teams
 
 ## Demo
 
-Live demo: [https://ost-builder.pages.dev](https://ost-builder.pages.dev)
+Live demo: [https://ost-builder.trinixlabs.dev](https://ost-builder.trinixlabs.dev)
 
-![OST Builder](https://ost-builder.pages.dev/screenshots/ost-builder-showcase.png)
+![OST Builder](https://ost-builder.trinixlabs.dev/screenshots/ost-builder-showcase.png)
 
 ## Features
 

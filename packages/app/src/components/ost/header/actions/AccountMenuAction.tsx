@@ -77,9 +77,16 @@ export function AccountMenuAction() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" aria-label="Account menu">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 rounded-full"
+          aria-label="Account menu"
+        >
           <Avatar className="h-8 w-8 border border-border">
-            {user?.avatarUrl ? <AvatarImage src={user.avatarUrl} alt={user.name || 'User avatar'} /> : null}
+            {user?.avatarUrl ? (
+              <AvatarImage src={user.avatarUrl} alt={user.name || 'User avatar'} />
+            ) : null}
             <AvatarFallback className="text-xs">
               {user ? initials || <User className="w-4 h-4" /> : <User className="w-4 h-4" />}
             </AvatarFallback>

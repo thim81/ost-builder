@@ -4,7 +4,12 @@ import type { ShareSettings } from '@ost-builder/shared';
 const STORAGE_KEY = 'ost:local:snapshots:v1';
 const ACTIVE_SOURCE_KEY_STORAGE = 'ost:local:active-source-key';
 
-export type SnapshotSourceType = 'draft' | 'create-new' | 'share-cloud' | 'share-fragment' | 'manual';
+export type SnapshotSourceType =
+  | 'draft'
+  | 'create-new'
+  | 'share-cloud'
+  | 'share-fragment'
+  | 'manual';
 
 export type SnapshotPayload = {
   name: string;

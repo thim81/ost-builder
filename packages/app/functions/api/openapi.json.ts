@@ -79,6 +79,34 @@ function buildSpec(requestUrl: string) {
           },
         },
       },
+      '/api/auth/token': {
+        post: {
+          summary: 'Mint access and refresh tokens from session or one-time CLI code',
+          responses: {
+            '200': { description: 'Access and refresh tokens issued' },
+            '400': { description: 'Invalid code' },
+            '401': { description: 'Authentication required' },
+          },
+        },
+      },
+      '/api/auth/refresh': {
+        post: {
+          summary: 'Refresh access token using refresh token',
+          responses: {
+            '200': { description: 'New access and refresh tokens issued' },
+            '400': { description: 'Missing refresh token' },
+            '401': { description: 'Invalid or expired refresh token' },
+          },
+        },
+      },
+      '/api/auth/cli/callback': {
+        get: {
+          summary: 'CLI OAuth callback bridge',
+          responses: {
+            '302': { description: 'Redirects to localhost callback with one-time code' },
+          },
+        },
+      },
       '/api/share/store': {
         post: {
           summary: 'Create account-backed stored share',
